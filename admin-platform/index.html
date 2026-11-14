@@ -24,6 +24,7 @@
       <nav class="nav">
         <button class="nav-link active" data-page="dashboard"><span>▦</span> نظرة عامة</button>
         <button class="nav-link" data-page="teachers"><span>♙</span> الأساتذة</button>
+        <button class="nav-link" data-page="teacher-space"><span>♙</span> فضاء الأستاذ</button>
         <button class="nav-link" data-page="groups"><span>▤</span> الأفواج والحصص</button>
         <button class="nav-link" data-page="students"><span>♧</span> التلاميذ</button>
         <button class="nav-link" data-page="payments"><span>◈</span> المدفوعات</button>
@@ -110,10 +111,10 @@
             </article>
 
             <article class="stat-card">
-              <div class="stat-top"><span class="stat-icon amber">◈</span><span class="stat-note">غير متصل</span></div>
+              <div class="stat-top"><span class="stat-icon amber">◈</span><span class="stat-note">مباشر</span></div>
               <p class="stat-label">المداخيل المؤكدة</p>
-              <strong>— <small>دج</small></strong>
-              <small>ستُحسب من المدفوعات المؤكدة</small>
+              <strong id="dashboardRevenue">— <small>دج</small></strong>
+              <small>من المدفوعات المؤكدة</small>
             </article>
           </div>
 
@@ -168,6 +169,100 @@
                     <td><span class="status status-active">نشط</span></td>
                     <td><button class="text-btn" data-goto="teacher-profile">عرض الملف ←</button></td>
                   </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+
+        <!-- فضاء الأستاذ -->
+        <section class="page" id="page-teacher-space">
+          <div class="section-heading">
+            <div>
+              <h2>فضاء الأستاذ بومدين</h2>
+              <p>إدارة الأفواج والتلاميذ وتأكيد دفع الحصص</p>
+            </div>
+            <span class="muted-chip">متصل بقاعدة البيانات</span>
+          </div>
+
+          <div class="stats-grid compact-stats">
+            <article class="stat-card">
+              <p class="stat-label">عدد التلاميذ</p>
+              <strong id="teacherStudentsCount">—</strong>
+              <small>التلاميذ المسجلون</small>
+            </article>
+            <article class="stat-card">
+              <p class="stat-label">إجمالي الحجوزات</p>
+              <strong id="teacherBookingsCount">—</strong>
+              <small>الحصص المحجوزة</small>
+            </article>
+            <article class="stat-card">
+              <p class="stat-label">المدفوعات المؤكدة</p>
+              <strong id="teacherPaidCount">—</strong>
+              <small>حصص تم دفعها</small>
+            </article>
+            <article class="stat-card">
+              <p class="stat-label">المداخيل</p>
+              <strong id="teacherRevenue">— دج</strong>
+              <small>المبالغ المستلمة</small>
+            </article>
+          </div>
+
+          <article class="panel">
+            <div class="panel-head">
+              <div>
+                <h3>أفواج الأستاذ</h3>
+                <p>اختر فوجاً لعرض التلاميذ والحصص المسجلة</p>
+              </div>
+            </div>
+            <div id="teacherGroupsGrid" class="stats-grid">
+              <p>جارٍ تحميل الأفواج...</p>
+            </div>
+          </article>
+
+          <article class="panel" id="teacherGroupDetails" style="display:none; margin-top:20px;">
+            <div class="panel-head">
+              <div>
+                <h3 id="teacherSelectedGroup">تلاميذ الفوج</h3>
+                <p id="teacherSelectedGroupInfo">قائمة الحجوزات وحالة الدفع</p>
+              </div>
+              <button class="outline-btn" id="teacherRefreshGroup">تحديث القائمة</button>
+            </div>
+
+            <div class="stats-grid compact-stats">
+              <article class="stat-card">
+                <p class="stat-label">عدد الحجوزات</p>
+                <strong id="teacherGroupBookings">—</strong>
+              </article>
+              <article class="stat-card">
+                <p class="stat-label">مدفوع</p>
+                <strong id="teacherGroupPaid">—</strong>
+              </article>
+              <article class="stat-card">
+                <p class="stat-label">غير مدفوع</p>
+                <strong id="teacherGroupUnpaid">—</strong>
+              </article>
+              <article class="stat-card">
+                <p class="stat-label">مداخيل الفوج</p>
+                <strong id="teacherGroupRevenue">— دج</strong>
+              </article>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>التلميذ</th>
+                    <th>العمر</th>
+                    <th>تاريخ الحصة</th>
+                    <th>حالة التسجيل</th>
+                    <th>الدفع</th>
+                    <th>المبلغ</th>
+                    <th>الإجراء</th>
+                  </tr>
+                </thead>
+                <tbody id="teacherGroupStudentsBody">
+                  <tr><td colspan="7">اختر فوجاً لعرض التلاميذ.</td></tr>
                 </tbody>
               </table>
             </div>
@@ -291,17 +386,17 @@
         <section class="page" id="page-payments">
           <div class="section-heading">
             <div><h2>المدفوعات</h2><p>مراجعة الدفع وحساب المداخيل الأسبوعية</p></div>
-            <span class="muted-chip">غير متصل</span>
+            <span class="muted-chip">متصل بملخص الأستاذ</span>
           </div>
           <div class="stats-grid compact-stats">
-            <article class="stat-card"><p class="stat-label">المدفوعات المؤكدة</p><strong>—</strong><small>سيتم جلبها من السيرفر</small></article>
-            <article class="stat-card"><p class="stat-label">المداخيل هذا الأسبوع</p><strong>— دج</strong><small>من الدفعات المؤكدة فقط</small></article>
-            <article class="stat-card"><p class="stat-label">بانتظار التأكيد</p><strong>—</strong><small>لا توجد بيانات متصلة</small></article>
+            <article class="stat-card"><p class="stat-label">المدفوعات المؤكدة</p><strong id="adminPaidCount">—</strong><small>من الحجوزات المدفوعة</small></article>
+            <article class="stat-card"><p class="stat-label">المداخيل</p><strong id="adminRevenue">— دج</strong><small>من الدفعات المؤكدة</small></article>
+            <article class="stat-card"><p class="stat-label">بانتظار التأكيد</p><strong id="adminUnpaidCount">—</strong><small>الحجوزات غير المدفوعة</small></article>
           </div>
           <article class="panel empty-state">
             <div class="empty-icon">◈</div>
-            <h3>سجل المدفوعات سيظهر هنا</h3>
-            <p>ستتمكن لاحقاً من تأكيد دفع كل تلميذ، وسيُحدّث مجموع المداخيل تلقائياً.</p>
+            <h3>ملخص المدفوعات</h3>
+            <p>تُحدّث الأرقام تلقائياً بعد تأكيد الأستاذ للدفع من فضائه.</p>
           </article>
         </section>
 
