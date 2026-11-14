@@ -79,7 +79,7 @@
             <article class="panel teacher-panel"><div class="panel-head"><div><h3>الأستاذ الحالي</h3><p>ملف الأستاذ</p></div><span class="status-dot">نشط</span></div>
               <div class="teacher-profile"><div class="teacher-avatar">ب</div><div><h3>الأستاذ بومدين</h3><p>علوم الطبيعة والحياة</p><span class="level-tag">الطور الثانوي</span></div></div>
               <div class="teacher-meta"><div><span>عدد الأفواج</span><b>05 أفواج</b></div><div><span>أيام التدريس</span><b>الجمعة والسبت</b></div><div><span>سعر الحصة</span><b>300 دج</b></div></div>
-              <button class="outline-btn full" data-goto="teachers">فتح ملف الأستاذ</button>
+              <button class="outline-btn full" data-goto="teacher-profile">فتح ملف الأستاذ</button>
             </article>
           </div>
           <div class="notice-banner"><span class="notice-mark">i</span><div><b>ملاحظة مهمة حول هذه النسخة</b><p>هذه واجهة أولية تفاعلية ببيانات توضيحية. لا يوجد حالياً تسجيل دخول إداري أو اتصال بقاعدة البيانات أو تنفيذ عمليات دفع فعلية. سنضيف ذلك في مرحلة ربط السيرفر الآمن.</p></div></div>
@@ -87,7 +87,7 @@
 
         <section class="page" id="page-teachers">
           <div class="section-heading"><div><h2>الأساتذة</h2><p>قائمة الأساتذة المسجلين في المدرسة</p></div><button class="primary-btn" id="addTeacher">＋ إضافة أستاذ</button></div>
-          <article class="panel teacher-table-card"><div class="table-wrap"><table><thead><tr><th>الأستاذ</th><th>المادة</th><th>المستوى</th><th>الأفواج</th><th>الحالة</th></tr></thead><tbody><tr><td><div class="person-cell"><span class="table-avatar">ب</span><b>الأستاذ بومدين</b></div></td><td>علوم الطبيعة والحياة</td><td>الثانوي</td><td>05</td><td><span class="status status-active">نشط</span></td></tr></tbody></table></div></article>
+          <article class="panel teacher-table-card"><div class="table-wrap"><table><thead><tr><th>الأستاذ</th><th>المادة</th><th>المستوى</th><th>الأفواج</th><th>الحالة</th><th>الملف</th></tr></thead><tbody><tr><td><div class="person-cell"><span class="table-avatar">ب</span><b>الأستاذ بومدين</b></div></td><td>علوم الطبيعة والحياة</td><td>الثانوي</td><td>05</td><td><span class="status status-active">نشط</span></td><td><button class="text-btn" data-goto="teacher-profile">عرض الملف ←</button></td></tr></tbody></table></div></article>
           <div class="notice-banner"><span class="notice-mark">i</span><div><b>ملف الأستاذ</b><p>الأفواج الخمسة الحالية كلها تابعة للأستاذ بومدين. إضافة الأساتذة الجدد ستُفعّل بعد تجهيز واجهات الإدارة في السيرفر.</p></div></div>
         </section>
 
@@ -102,6 +102,32 @@
             <tr><td><b>الفوج الخامس</b></td><td>السبت</td><td>10:00 — 12:00</td><td>بومدين</td><td>300 دج</td><td>علوم طبيعية</td></tr>
           </tbody></table></div></article>
           <div class="notice-banner"><span class="notice-mark">i</span><div><b>الإدارة الفعلية للأفواج</b><p>الأزرار هنا للمعاينة فقط. لن يتم إنشاء فوج أو تغييره فعلياً قبل ربطه بواجهات API محمية.</p></div></div>
+        </section>
+
+
+        <section class="page" id="page-teacher-profile">
+          <div class="section-heading"><div><h2>ملف الأستاذ بومدين</h2><p>المعلومات الأساسية والبرنامج الأسبوعي</p></div><button class="outline-btn" data-goto="teachers">← العودة إلى الأساتذة</button></div>
+          <article class="panel profile-hero">
+            <div class="profile-hero-main"><div class="teacher-avatar large">ب</div><div><span class="status status-active">أستاذ نشط</span><h2>الأستاذ بومدين</h2><p>علوم الطبيعة والحياة · الطور الثانوي</p></div></div>
+            <div class="profile-price"><small>سعر الحصة</small><b>300 دج</b></div>
+          </article>
+          <div class="stats-grid profile-stats">
+            <article class="stat-card"><p class="stat-label">عدد الأفواج</p><strong>05</strong><small>كلها تابعة للأستاذ بومدين</small></article>
+            <article class="stat-card"><p class="stat-label">أيام التدريس</p><strong>02</strong><small>الجمعة والسبت</small></article>
+            <article class="stat-card"><p class="stat-label">مدة الحصة</p><strong>02 <small>ساعة</small></strong><small>لكل فوج</small></article>
+            <article class="stat-card"><p class="stat-label">سعر الحصة</p><strong>300 <small>دج</small></strong><small>السعر الحالي</small></article>
+          </div>
+          <article class="panel profile-groups">
+            <div class="panel-head"><div><h3>الأفواج التابعة للأستاذ</h3><p>يمكننا لاحقاً إضافة إجراءات التعديل والحذف وإدارة المسجلين</p></div><button class="primary-btn" data-goto="groups">إدارة الأفواج</button></div>
+            <div class="table-wrap"><table><thead><tr><th>اسم الفوج</th><th>اليوم</th><th>التوقيت</th><th>المادة</th><th>السعر</th><th>الحالة</th></tr></thead><tbody>
+              <tr><td><b>الفوج الأول</b></td><td>الجمعة</td><td>08:00 — 10:00</td><td>علوم طبيعية</td><td>300 دج</td><td><span class="status status-active">نشط</span></td></tr>
+              <tr><td><b>الفوج الثاني</b></td><td>الجمعة</td><td>10:00 — 12:00</td><td>علوم طبيعية</td><td>300 دج</td><td><span class="status status-active">نشط</span></td></tr>
+              <tr><td><b>الفوج الثالث</b></td><td>الجمعة</td><td>14:00 — 16:00</td><td>علوم طبيعية</td><td>300 دج</td><td><span class="status status-active">نشط</span></td></tr>
+              <tr><td><b>الفوج الرابع</b></td><td>السبت</td><td>08:00 — 10:00</td><td>علوم طبيعية</td><td>300 دج</td><td><span class="status status-active">نشط</span></td></tr>
+              <tr><td><b>الفوج الخامس</b></td><td>السبت</td><td>10:00 — 12:00</td><td>علوم طبيعية</td><td>300 دج</td><td><span class="status status-active">نشط</span></td></tr>
+            </tbody></table></div>
+          </article>
+          <div class="notice-banner"><span class="notice-mark">i</span><div><b>بيانات تعريفية أولية</b><p>البرنامج يعكس الأفواج الخمسة المعروفة حالياً. أعداد التلاميذ والحضور والمدفوعات ستظهر بعد ربط هذه الصفحة بقاعدة بيانات المدرسة.</p></div></div>
         </section>
 
         <section class="page" id="page-students">

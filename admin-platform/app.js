@@ -1,6 +1,6 @@
 (() => {
   const titles = {
-    dashboard: "نظرة عامة", teachers: "الأساتذة", groups: "الأفواج والحصص",
+    dashboard: "نظرة عامة", teachers: "الأساتذة", "teacher-profile": "ملف الأستاذ بومدين", groups: "الأفواج والحصص",
     students: "التلاميذ", payments: "المدفوعات", notifications: "الإشعارات"
   };
   const navLinks = [...document.querySelectorAll(".nav-link")];
