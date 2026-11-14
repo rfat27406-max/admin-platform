@@ -1,8 +1,15 @@
+
 (() => {
   const titles = {
-    dashboard: "نظرة عامة", teachers: "الأساتذة", "teacher-profile": "ملف الأستاذ بومدين", groups: "الأفواج والحصص",
-    students: "التلاميذ", payments: "المدفوعات", notifications: "الإشعارات"
+    dashboard: "نظرة عامة",
+    teachers: "الأساتذة",
+    "teacher-profile": "ملف الأستاذ بومدين",
+    groups: "الأفواج والحصص",
+    students: "التلاميذ",
+    payments: "المدفوعات",
+    notifications: "الإشعارات"
   };
+
   const navLinks = [...document.querySelectorAll(".nav-link")];
   const pages = [...document.querySelectorAll(".page")];
   const title = document.getElementById("pageTitle");
@@ -20,42 +27,59 @@
 
   function navigate(page) {
     if (!titles[page]) return;
-    navLinks.forEach(link => link.classList.toggle("active", link.dataset.page === page));
-    pages.forEach(section => section.classList.toggle("active", section.id === `page-${page}`));
+
+    navLinks.forEach(link =>
+      link.classList.toggle("active", link.dataset.page === page)
+    );
+
+    pages.forEach(section =>
+      section.classList.toggle("active", section.id === `page-${page}`)
+    );
+
     title.textContent = titles[page];
     crumb.textContent = titles[page];
     sidebar.classList.remove("open");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  navLinks.forEach(link => link.addEventListener("click", () => navigate(link.dataset.page)));
+  navLinks.forEach(link =>
+    link.addEventListener("click", () => navigate(link.dataset.page))
+  );
+
   document.querySelectorAll("[data-goto]").forEach(button =>
     button.addEventListener("click", () => navigate(button.dataset.goto))
   );
 
-  document.getElementById("menuToggle").addEventListener("click", () => sidebar.classList.toggle("open"));
-  document.getElementById("topNotification").addEventListener("click", () => navigate("notifications"));
-
-  // These actions are intentionally informational until secure admin API endpoints exist.
-  document.getElementById("addTeacher").addEventListener("click", () =>
-    showToast("إضافة الأستاذ ستُفعّل بعد ربط واجهة الإدارة بالسيرفر الآمن.")
+  document.getElementById("menuToggle").addEventListener("click", () =>
+    sidebar.classList.toggle("open")
   );
+
+  document.getElementById("topNotification").addEventListener("click", () =>
+    navigate("notifications")
+  );
+
+  document.getElementById("addTeacher").addEventListener("click", () =>
+    showToast("إضافة الأستاذ ستُفعّل في مرحلة إدارة الأساتذة.")
+  );
+
   document.getElementById("addGroup").addEventListener("click", () =>
-    showToast("إضافة فوج ستُفعّل بعد تجهيز صلاحيات الإدارة في السيرفر.")
+    showToast("إضافة فوج ستُفعّل في مرحلة إدارة الأفواج.")
   );
 
   document.addEventListener("keydown", event => {
     if (event.key === "Escape") sidebar.classList.remove("open");
   });
 
-
-  // Live read-only connection to the school Worker.
-  // This reads the public active-groups endpoint; admin mutations will be added later.
+  // الاتصال بسيرفر المدرسة
   const API_BASE = "https://school-server.rfat27406.workers.dev";
 
   function escapeHTML(value) {
     return String(value ?? "").replace(/[&<>"']/g, char => ({
-      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
     })[char]);
   }
 
@@ -70,13 +94,27 @@
     return name.startsWith("الفوج") ? name : (name ? `الفوج ${name}` : "فوج");
   }
 
+  function formatDate(value) {
+    if (!value) return "—";
+
+    const date = String(value).slice(0, 10);
+    const parts = date.split("-");
+
+    if (parts.length !== 3) return escapeHTML(value);
+
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  }
+
+  // تحميل الأفواج من قاعدة البيانات
   async function loadGroupsFromServer() {
     try {
       const response = await fetch(`${API_BASE}/api/groups`, {
         method: "GET",
         headers: { "Accept": "application/json" }
       });
+
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
       const payload = await response.json();
       const groups = Array.isArray(payload.groups) ? payload.groups : [];
 
@@ -88,14 +126,18 @@
           <td>بومدين</td>
           <td>${escapeHTML(group.price_dzd)} دج</td>
           <td>علوم طبيعية</td>
-        </tr>`).join("");
+        </tr>
+      `).join("");
 
       const groupTbody = document.querySelector("#page-groups table tbody");
+
       if (groupTbody) {
-        groupTbody.innerHTML = groupRows || '<tr><td colspan="6">لا توجد أفواج نشطة حالياً.</td></tr>';
+        groupTbody.innerHTML = groupRows ||
+          '<tr><td colspan="6">لا توجد أفواج نشطة حالياً.</td></tr>';
       }
 
       const profileTbody = document.querySelector("#page-teacher-profile table tbody");
+
       if (profileTbody) {
         profileTbody.innerHTML = groups.map(group => `
           <tr>
@@ -105,10 +147,13 @@
             <td>علوم طبيعية</td>
             <td>${escapeHTML(group.price_dzd)} دج</td>
             <td><span class="status status-active">نشط</span></td>
-          </tr>`).join("") || '<tr><td colspan="6">لا توجد أفواج نشطة حالياً.</td></tr>';
+          </tr>
+        `).join("") ||
+          '<tr><td colspan="6">لا توجد أفواج نشطة حالياً.</td></tr>';
       }
 
       const scheduleList = document.querySelector("#page-dashboard .schedule-list");
+
       if (scheduleList) {
         scheduleList.innerHTML = groups.map(group => `
           <div class="schedule-row">
@@ -118,26 +163,117 @@
               <small>${escapeHTML(group.start_time)} — ${escapeHTML(group.end_time)}</small>
             </div>
             <span class="subject">علوم طبيعية</span>
-          </div>`).join("") || '<p class="empty-hint">لا توجد أفواج نشطة حالياً.</p>';
+          </div>
+        `).join("") ||
+          '<p class="empty-hint">لا توجد أفواج نشطة حالياً.</p>';
       }
 
-      const groupCount = document.querySelector("#page-teacher-profile .profile-stats .stat-card strong");
-      if (groupCount) groupCount.textContent = String(groups.length).padStart(2, "0");
+      const groupCount = document.querySelector(
+        "#page-teacher-profile .profile-stats .stat-card strong"
+      );
 
-      const dashboardGroupStat = [...document.querySelectorAll("#page-dashboard .stat-card")]
-        .find(card => card.querySelector(".stat-label")?.textContent.trim() === "الأفواج");
+      if (groupCount) {
+        groupCount.textContent = String(groups.length).padStart(2, "0");
+      }
+
+      const dashboardGroupStat = [
+        ...document.querySelectorAll("#page-dashboard .stat-card")
+      ].find(card =>
+        card.querySelector(".stat-label")?.textContent.trim() === "الأفواج"
+      );
+
       if (dashboardGroupStat) {
         const value = dashboardGroupStat.querySelector("strong");
         if (value) value.textContent = String(groups.length).padStart(2, "0");
       }
 
       showToast("تم تحميل الأفواج من قاعدة بيانات المدرسة.");
+
     } catch (error) {
       console.error("تعذر تحميل الأفواج:", error);
-      showToast("تعذر الاتصال بالسيرفر. تحقق من إعداد CORS ونشر Worker.");
+      showToast("تعذر تحميل الأفواج من السيرفر.");
     }
   }
 
+  // تحميل التلاميذ من قاعدة البيانات
+  async function loadStudentsFromServer() {
+    try {
+      const response = await fetch(`${API_BASE}/api/admin/students`, {
+        method: "GET",
+        headers: { "Accept": "application/json" }
+      });
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      const payload = await response.json();
+      const students = Array.isArray(payload.students) ? payload.students : [];
+
+      const studentsTable = document.querySelector("#page-students table");
+
+      if (studentsTable) {
+        const thead = studentsTable.querySelector("thead");
+        const tbody = studentsTable.querySelector("tbody");
+
+        if (thead) {
+          thead.innerHTML = `
+            <tr>
+              <th>التلميذ</th>
+              <th>العمر</th>
+              <th>تاريخ التسجيل</th>
+              <th>عدد الحجوزات</th>
+              <th>مدفوع</th>
+              <th>غير مدفوع</th>
+            </tr>
+          `;
+        }
+
+        if (tbody) {
+          tbody.innerHTML = students.map(student => `
+            <tr>
+              <td>
+                <b>${escapeHTML(student.first_name)} ${escapeHTML(student.last_name)}</b>
+              </td>
+              <td>${escapeHTML(student.age)} سنة</td>
+              <td>${formatDate(student.created_at)}</td>
+              <td>${escapeHTML(student.bookings_count ?? 0)}</td>
+              <td>
+                <span class="status status-active">
+                  ${escapeHTML(student.paid_count ?? 0)}
+                </span>
+              </td>
+              <td>
+                <span class="status status-pending">
+                  ${escapeHTML(student.unpaid_count ?? 0)}
+                </span>
+              </td>
+            </tr>
+          `).join("") ||
+            '<tr><td colspan="6">لا يوجد تلاميذ مسجلون حالياً.</td></tr>';
+        }
+      }
+
+      // تحديث إحصائية عدد التلاميذ في الصفحة الرئيسية
+      const dashboardStudentStat = [
+        ...document.querySelectorAll("#page-dashboard .stat-card")
+      ].find(card =>
+        card.querySelector(".stat-label")?.textContent.trim() === "التلاميذ"
+      );
+
+      if (dashboardStudentStat) {
+        const value = dashboardStudentStat.querySelector("strong");
+        if (value) value.textContent = String(students.length).padStart(2, "0");
+      }
+
+      showToast(`تم تحميل ${students.length} تلميذ من قاعدة البيانات.`);
+
+    } catch (error) {
+      console.error("تعذر تحميل التلاميذ:", error);
+      showToast("تعذر تحميل التلاميذ. تحقق من اتصال السيرفر.");
+    }
+  }
+
+  // تشغيل تحميل البيانات
   loadGroupsFromServer();
+  loadStudentsFromServer();
 
 })();
