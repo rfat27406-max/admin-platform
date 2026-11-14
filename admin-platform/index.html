@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#101a35">
+  <title>مدرستي | لوحة الإدارة</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="#" aria-label="مدرستي">
+        <span class="brand-mark">م</span>
+        <span><b>مدرستي</b><small>نظام إدارة المدرسة</small></span>
+      </a>
+      <div class="side-label">القائمة الرئيسية</div>
+      <nav class="nav">
+        <button class="nav-link active" data-page="dashboard"><span>▦</span> نظرة عامة</button>
+        <button class="nav-link" data-page="teachers"><span>♙</span> الأساتذة</button>
+        <button class="nav-link" data-page="groups"><span>▤</span> الأفواج والحصص</button>
+        <button class="nav-link" data-page="students"><span>♧</span> التلاميذ</button>
+        <button class="nav-link" data-page="payments"><span>◈</span> المدفوعات</button>
+        <button class="nav-link" data-page="notifications"><span>♢</span> الإشعارات</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="help-card">
+          <span class="help-icon">✦</span>
+          <b>مساحة الإدارة</b>
+          <p>ستظهر البيانات الحقيقية بعد ربط الواجهة بالسيرفر وتأمين حساب الإدارة.</p>
+        </div>
+        <div class="profile-mini">
+          <div class="avatar">م</div>
+          <div><b>مدير المدرسة</b><small>وضع المعاينة</small></div>
+          <span class="dots">•••</span>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-start">
+          <button class="icon-btn mobile-menu" id="menuToggle" aria-label="فتح القائمة">☰</button>
+          <div><div class="eyebrow">مساحة العمل / <span id="crumb">نظرة عامة</span></div><h1 id="pageTitle">نظرة عامة</h1></div>
+        </div>
+        <div class="top-actions">
+          <span class="demo-pill"><i></i> بيانات تجريبية</span>
+          <button class="icon-btn" id="topNotification" aria-label="الإشعارات">♢<em></em></button>
+          <div class="top-avatar">م</div>
+        </div>
+      </header>
+
+      <div class="content">
+        <section class="page active" id="page-dashboard">
+          <div class="hero">
+            <div><span class="hero-kicker">لوحة تحكم مدرستك</span><h2>أهلاً بك، مدير المدرسة <span>✦</span></h2><p>تابع نشاط المدرسة ونظّم عملياتك اليومية من مكان واحد.</p></div>
+            <div class="hero-art"><div class="orb orb-one"></div><div class="orb orb-two"></div><div class="hero-symbol">م</div></div>
+          </div>
+          <div class="section-heading"><div><h2>ملخص المدرسة</h2><p>أرقام توضيحية لتصميم لوحة التحكم فقط</p></div><span class="muted-chip">نموذج تجريبي</span></div>
+          <div class="stats-grid">
+            <article class="stat-card"><div class="stat-top"><span class="stat-icon purple">♙</span><span class="stat-note">بيانات نموذجية</span></div><p class="stat-label">الأساتذة</p><strong>01</strong><small>الأستاذ بومدين</small></article>
+            <article class="stat-card"><div class="stat-top"><span class="stat-icon blue">♧</span><span class="stat-note">بيانات نموذجية</span></div><p class="stat-label">التلاميذ</p><strong>—</strong><small>بانتظار ربط قاعدة البيانات</small></article>
+            <article class="stat-card"><div class="stat-top"><span class="stat-icon mint">▤</span><span class="stat-note">مُعدّة مسبقاً</span></div><p class="stat-label">الأفواج</p><strong>05</strong><small>أفواج الأستاذ بومدين</small></article>
+            <article class="stat-card"><div class="stat-top"><span class="stat-icon amber">◈</span><span class="stat-note">غير متصل</span></div><p class="stat-label">المداخيل المؤكدة</p><strong>— <small>دج</small></strong><small>ستُحسب من المدفوعات المؤكدة فقط</small></article>
+          </div>
+          <div class="dashboard-grid">
+            <article class="panel schedule-panel"><div class="panel-head"><div><h3>برنامج الأفواج</h3><p>الجدول الحالي للأستاذ بومدين</p></div><button class="text-btn" data-goto="groups">عرض كل الأفواج ←</button></div>
+              <div class="schedule-list">
+                <div class="schedule-row"><span class="day-badge">الجمعة</span><div class="schedule-info"><b>الفوج الأول</b><small>08:00 — 10:00</small></div><span class="subject">علوم طبيعية</span></div>
+                <div class="schedule-row"><span class="day-badge">الجمعة</span><div class="schedule-info"><b>الفوج الثاني</b><small>10:00 — 12:00</small></div><span class="subject">علوم طبيعية</span></div>
+                <div class="schedule-row"><span class="day-badge">الجمعة</span><div class="schedule-info"><b>الفوج الثالث</b><small>14:00 — 16:00</small></div><span class="subject">علوم طبيعية</span></div>
+                <div class="schedule-row"><span class="day-badge">السبت</span><div class="schedule-info"><b>الفوج الرابع</b><small>08:00 — 10:00</small></div><span class="subject">علوم طبيعية</span></div>
+                <div class="schedule-row"><span class="day-badge">السبت</span><div class="schedule-info"><b>الفوج الخامس</b><small>10:00 — 12:00</small></div><span class="subject">علوم طبيعية</span></div>
+              </div>
+            </article>
+            <article class="panel teacher-panel"><div class="panel-head"><div><h3>الأستاذ الحالي</h3><p>ملف الأستاذ</p></div><span class="status-dot">نشط</span></div>
+              <div class="teacher-profile"><div class="teacher-avatar">ب</div><div><h3>الأستاذ بومدين</h3><p>علوم الطبيعة والحياة</p><span class="level-tag">الطور الثانوي</span></div></div>
+              <div class="teacher-meta"><div><span>عدد الأفواج</span><b>05 أفواج</b></div><div><span>أيام التدريس</span><b>الجمعة والسبت</b></div><div><span>سعر الحصة</span><b>300 دج</b></div></div>
+              <button class="outline-btn full" data-goto="teachers">فتح ملف الأستاذ</button>
+            </article>
+          </div>
+          <div class="notice-banner"><span class="notice-mark">i</span><div><b>ملاحظة مهمة حول هذه النسخة</b><p>هذه واجهة أولية تفاعلية ببيانات توضيحية. لا يوجد حالياً تسجيل دخول إداري أو اتصال بقاعدة البيانات أو تنفيذ عمليات دفع فعلية. سنضيف ذلك في مرحلة ربط السيرفر الآمن.</p></div></div>
+        </section>
+
+        <section class="page" id="page-teachers">
+          <div class="section-heading"><div><h2>الأساتذة</h2><p>قائمة الأساتذة المسجلين في المدرسة</p></div><button class="primary-btn" id="addTeacher">＋ إضافة أستاذ</button></div>
+          <article class="panel teacher-table-card"><div class="table-wrap"><table><thead><tr><th>الأستاذ</th><th>المادة</th><th>المستوى</th><th>الأفواج</th><th>الحالة</th></tr></thead><tbody><tr><td><div class="person-cell"><span class="table-avatar">ب</span><b>الأستاذ بومدين</b></div></td><td>علوم الطبيعة والحياة</td><td>الثانوي</td><td>05</td><td><span class="status status-active">نشط</span></td></tr></tbody></table></div></article>
+          <div class="notice-banner"><span class="notice-mark">i</span><div><b>ملف الأستاذ</b><p>الأفواج الخمسة الحالية كلها تابعة للأستاذ بومدين. إضافة الأساتذة الجدد ستُفعّل بعد تجهيز واجهات الإدارة في السيرفر.</p></div></div>
+        </section>
+
+        <section class="page" id="page-groups">
+          <div class="section-heading"><div><h2>الأفواج والحصص</h2><p>البرنامج الأسبوعي للأستاذ بومدين</p></div><button class="primary-btn" id="addGroup">＋ إضافة فوج</button></div>
+          <article class="panel"><div class="panel-head"><div><h3>الأفواج الحالية</h3><p>السعر 300 دج للحصة · سعة التسجيل غير محدودة حسب الإعداد الحالي</p></div><span class="muted-chip">05 أفواج</span></div>
+          <div class="table-wrap"><table><thead><tr><th>الفوج</th><th>اليوم</th><th>التوقيت</th><th>الأستاذ</th><th>السعر</th><th>المادة</th></tr></thead><tbody>
+            <tr><td><b>الفوج الأول</b></td><td>الجمعة</td><td>08:00 — 10:00</td><td>بومدين</td><td>300 دج</td><td>علوم طبيعية</td></tr>
+            <tr><td><b>الفوج الثاني</b></td><td>الجمعة</td><td>10:00 — 12:00</td><td>بومدين</td><td>300 دج</td><td>علوم طبيعية</td></tr>
+            <tr><td><b>الفوج الثالث</b></td><td>الجمعة</td><td>14:00 — 16:00</td><td>بومدين</td><td>300 دج</td><td>علوم طبيعية</td></tr>
+            <tr><td><b>الفوج الرابع</b></td><td>السبت</td><td>08:00 — 10:00</td><td>بومدين</td><td>300 دج</td><td>علوم طبيعية</td></tr>
+            <tr><td><b>الفوج الخامس</b></td><td>السبت</td><td>10:00 — 12:00</td><td>بومدين</td><td>300 دج</td><td>علوم طبيعية</td></tr>
+          </tbody></table></div></article>
+          <div class="notice-banner"><span class="notice-mark">i</span><div><b>الإدارة الفعلية للأفواج</b><p>الأزرار هنا للمعاينة فقط. لن يتم إنشاء فوج أو تغييره فعلياً قبل ربطه بواجهات API محمية.</p></div></div>
+        </section>
+
+        <section class="page" id="page-students">
+          <div class="section-heading"><div><h2>التلاميذ</h2><p>متابعة حسابات التلاميذ واشتراكاتهم</p></div><span class="muted-chip">بانتظار اتصال السيرفر</span></div>
+          <article class="panel empty-state"><div class="empty-icon">♧</div><h3>بيانات التلاميذ غير متصلة بعد</h3><p>بعد تجهيز صلاحيات الإدارة سنعرض هنا قائمة التلاميذ الحقيقية، مع إمكانية فتح ملف كل تلميذ ومراجعة تسجيلاته.</p></article>
+        </section>
+
+        <section class="page" id="page-payments">
+          <div class="section-heading"><div><h2>المدفوعات</h2><p>مراجعة الدفع وحساب المداخيل الأسبوعية</p></div><span class="muted-chip">غير متصل</span></div>
+          <div class="stats-grid compact-stats"><article class="stat-card"><p class="stat-label">المدفوعات المؤكدة</p><strong>—</strong><small>سيتم جلبها من السيرفر</small></article><article class="stat-card"><p class="stat-label">المداخيل هذا الأسبوع</p><strong>— دج</strong><small>من الدفعات المؤكدة فقط</small></article><article class="stat-card"><p class="stat-label">بانتظار التأكيد</p><strong>—</strong><small>لا توجد بيانات متصلة</small></article></div>
+          <article class="panel empty-state"><div class="empty-icon">◈</div><h3>سجل المدفوعات سيظهر هنا</h3><p>ستتمكن لاحقاً من تأكيد دفع كل تلميذ، وسيُحدّث مجموع المداخيل تلقائياً.</p></article>
+        </section>
+
+        <section class="page" id="page-notifications">
+          <div class="section-heading"><div><h2>الإشعارات</h2><p>إعداد رسائل التذكير والتنبيهات</p></div><span class="muted-chip">قيد التطوير</span></div>
+          <article class="panel notification-settings"><div class="setting-row"><div><b>تذكير قبل الحصة</b><p>إرسال تذكير للتلميذ قبل موعد الحصة بنصف ساعة.</p></div><span class="switch off">غير مفعّل</span></div><div class="setting-row"><div><b>تقييم بعد الحصة</b><p>إرسال طلب تقييم بعد انتهاء الحصة.</p></div><span class="switch off">غير مفعّل</span></div><div class="setting-row"><div><b>إشعارات الإدارة</b><p>التنبيه عند تسجيل تلميذ جديد أو تحديث الدفع.</p></div><span class="switch off">غير مفعّل</span></div></article>
+          <div class="notice-banner"><span class="notice-mark">i</span><div><b>الإشعارات ليست مفعّلة بعد</b><p>هذه الإعدادات توضح الوظائف المخطط لها فقط. سنضيف خدمة الإشعارات بعد تأمين السيرفر.</p></div></div>
+        </section>
+      </div>
+      <footer class="footer"><span>مدرستي © 2026</span><span>لوحة الإدارة · إصدار أولي</span></footer>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+  <script src="app.js"></script>
+</body>
+</html>
