@@ -18,7 +18,10 @@
   const toast = document.getElementById("toast");
   let toastTimer;
 
+  const API_BASE = "https://school-server.rfat27406.workers.dev";
+
   function showToast(message) {
+    if (!toast) return;
     toast.textContent = message;
     toast.classList.add("show");
     clearTimeout(toastTimer);
@@ -36,9 +39,10 @@
       section.classList.toggle("active", section.id === `page-${page}`)
     );
 
-    title.textContent = titles[page];
-    crumb.textContent = titles[page];
-    sidebar.classList.remove("open");
+    if (title) title.textContent = titles[page];
+    if (crumb) crumb.textContent = titles[page];
+    if (sidebar) sidebar.classList.remove("open");
+
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -50,28 +54,25 @@
     button.addEventListener("click", () => navigate(button.dataset.goto))
   );
 
-  document.getElementById("menuToggle").addEventListener("click", () =>
-    sidebar.classList.toggle("open")
+  document.getElementById("menuToggle")?.addEventListener("click", () =>
+    sidebar?.classList.toggle("open")
   );
 
-  document.getElementById("topNotification").addEventListener("click", () =>
+  document.getElementById("topNotification")?.addEventListener("click", () =>
     navigate("notifications")
   );
 
-  document.getElementById("addTeacher").addEventListener("click", () =>
+  document.getElementById("addTeacher")?.addEventListener("click", () =>
     showToast("إضافة الأستاذ ستُفعّل في مرحلة إدارة الأساتذة.")
   );
 
-  document.getElementById("addGroup").addEventListener("click", () =>
+  document.getElementById("addGroup")?.addEventListener("click", () =>
     showToast("إضافة فوج ستُفعّل في مرحلة إدارة الأفواج.")
   );
 
   document.addEventListener("keydown", event => {
-    if (event.key === "Escape") sidebar.classList.remove("open");
+    if (event.key === "Escape") sidebar?.classList.remove("open");
   });
-
-  // الاتصال بسيرفر المدرسة
-  const API_BASE = "https://school-server.rfat27406.workers.dev";
 
   function escapeHTML(value) {
     return String(value ?? "").replace(/[&<>"']/g, char => ({
@@ -105,13 +106,10 @@
     return `${parts[2]}/${parts[1]}/${parts[0]}`;
   }
 
-  // تحميل الأفواج من قاعدة البيانات
+  // تحميل الأفواج
   async function loadGroupsFromServer() {
     try {
-      const response = await fetch(`${API_BASE}/api/groups`, {
-        method: "GET",
-        headers: { "Accept": "application/json" }
-      });
+      const response = await fetch(`${API_BASE}/api/groups`);
 
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
@@ -195,80 +193,78 @@
     }
   }
 
-  // تحميل التلاميذ من قاعدة البيانات
+  // تحميل التلاميذ
   async function loadStudentsFromServer() {
     try {
-      const response = await fetch(`${API_BASE}/api/admin/students`, {
-        method: "GET",
-        headers: { "Accept": "application/json" }
-      });
+      const response = await fetch(`${API_BASE}/api/admin/students`);
 
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
       const payload = await response.json();
       const students = Array.isArray(payload.students) ? payload.students : [];
 
-      const studentsTable = document.querySelector("#page-students table");
+      const tbody = document.getElementById("studentsTableBody");
 
-      if (studentsTable) {
-        const thead = studentsTable.querySelector("thead");
-        const tbody = studentsTable.querySelector("tbody");
-
-        if (thead) {
-          thead.innerHTML = `
-            <tr>
-              <th>التلميذ</th>
-              <th>العمر</th>
-              <th>تاريخ التسجيل</th>
-              <th>عدد الحجوزات</th>
-              <th>مدفوع</th>
-              <th>غير مدفوع</th>
-            </tr>
-          `;
-        }
-
-        if (tbody) {
-          tbody.innerHTML = students.map(student => `
-            <tr>
-              <td>
-                <b>${escapeHTML(student.first_name)} ${escapeHTML(student.last_name)}</b>
-              </td>
-              <td>${escapeHTML(student.age)} سنة</td>
-              <td>${formatDate(student.created_at)}</td>
-              <td>${escapeHTML(student.bookings_count ?? 0)}</td>
-              <td>
-                <span class="status status-active">
-                  ${escapeHTML(student.paid_count ?? 0)}
-                </span>
-              </td>
-              <td>
-                <span class="status status-pending">
-                  ${escapeHTML(student.unpaid_count ?? 0)}
-                </span>
-              </td>
-            </tr>
-          `).join("") ||
-            '<tr><td colspan="6">لا يوجد تلاميذ مسجلون حالياً.</td></tr>';
-        }
+      if (tbody) {
+        tbody.innerHTML = students.map(student => `
+          <tr>
+            <td>
+              <b>${escapeHTML(student.first_name)} ${escapeHTML(student.last_name)}</b>
+            </td>
+            <td>${escapeHTML(student.age)} سنة</td>
+            <td>${formatDate(student.created_at)}</td>
+            <td>${escapeHTML(student.bookings_count ?? 0)}</td>
+            <td>
+              <span class="status status-active">
+                ${escapeHTML(student.paid_count ?? 0)}
+              </span>
+            </td>
+            <td>
+              <span class="status status-pending">
+                ${escapeHTML(student.unpaid_count ?? 0)}
+              </span>
+            </td>
+          </tr>
+        `).join("") ||
+          '<tr><td colspan="6">لا يوجد تلاميذ مسجلون حالياً.</td></tr>';
       }
 
-      // تحديث إحصائية عدد التلاميذ في الصفحة الرئيسية
-      const dashboardStudentStat = [
-        ...document.querySelectorAll("#page-dashboard .stat-card")
-      ].find(card =>
-        card.querySelector(".stat-label")?.textContent.trim() === "التلاميذ"
+      const totalBookings = students.reduce(
+        (sum, student) => sum + Number(student.bookings_count || 0), 0
       );
 
-      if (dashboardStudentStat) {
-        const value = dashboardStudentStat.querySelector("strong");
-        if (value) value.textContent = String(students.length).padStart(2, "0");
-      }
+      const totalPaid = students.reduce(
+        (sum, student) => sum + Number(student.paid_count || 0), 0
+      );
+
+      const totalUnpaid = students.reduce(
+        (sum, student) => sum + Number(student.unpaid_count || 0), 0
+      );
+
+      const setText = (id, value) => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = String(value);
+      };
+
+      setText("studentsTotal", students.length);
+      setText("studentsBookings", totalBookings);
+      setText("studentsPaid", totalPaid);
+      setText("studentsUnpaid", totalUnpaid);
+      setText("dashboardStudentsCount", String(students.length).padStart(2, "0"));
 
       showToast(`تم تحميل ${students.length} تلميذ من قاعدة البيانات.`);
 
     } catch (error) {
       console.error("تعذر تحميل التلاميذ:", error);
-      showToast("تعذر تحميل التلاميذ. تحقق من اتصال السيرفر.");
+
+      const tbody = document.getElementById("studentsTableBody");
+
+      if (tbody) {
+        tbody.innerHTML =
+          '<tr><td colspan="6">تعذر تحميل البيانات. تحقق من اتصال السيرفر.</td></tr>';
+      }
+
+      showToast("تعذر تحميل التلاميذ من السيرفر.");
     }
   }
 
