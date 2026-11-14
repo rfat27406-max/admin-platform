@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101b35"><title>فضاء الأستاذ | مدرستي</title>
+<link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f7fc;color:#17233d;font-family:Alexandria, sans-serif}.wrap{max-width:1120px;margin:auto;padding:28px}.top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:24px}.brand{font-weight:800;font-size:22px}.muted{color:#718096}.card{background:white;border:1px solid #e5eaf2;border-radius:18px;padding:22px;margin:16px 0;box-shadow:0 8px 24px #15294b08}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}.stat{background:#f8faff;border-radius:14px;padding:16px}.stat b{display:block;font-size:26px;margin-top:8px}.btn{border:0;border-radius:11px;padding:12px 16px;background:#2457d6;color:white;font:inherit;font-weight:700;cursor:pointer}.btn:disabled{opacity:.55}.btn.light{background:#eaf0ff;color:#234bb0}.field{display:block;margin:12px 0}.field input,.field select{width:100%;padding:12px;border:1px solid #d7deea;border-radius:10px;font:inherit}.hidden{display:none!important}table{width:100%;border-collapse:collapse;min-width:680px}th,td{text-align:right;padding:13px;border-bottom:1px solid #edf0f5;font-size:13px}.table-wrap{overflow:auto}.pill{background:#e8f7ef;color:#137345;padding:5px 9px;border-radius:20px}.error{color:#b91c1c}.login{max-width:420px;margin:8vh auto}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}@media(max-width:600px){.wrap{padding:16px}.top{align-items:flex-start;flex-direction:column}}
+</style></head>
+<body><main class="wrap">
+<div id="loginView" class="card login">
+  <div class="brand">مدرستي<span style="color:#2457d6">.</span> · فضاء الأستاذ</div>
+  <p class="muted">سجّل الدخول لإدارة أفواجك وتلاميذك ومدفوعاتك.</p>
+  <form id="loginForm">
+    <label class="field">معرّف الأستاذ<input id="teacherId" value="teacher-boumediene" required></label>
+    <label class="field">كلمة المرور<input id="teacherPassword" type="password" required></label>
+    <p id="loginError" class="error"></p><button class="btn" type="submit">دخول</button>
+  </form>
+</div>
+<div id="appView" class="hidden">
+  <header class="top"><div><div class="brand" id="teacherName">فضاء الأستاذ</div><div class="muted">إدارة الأفواج والتلاميذ والمدفوعات</div></div><button id="logout" class="btn light">تسجيل الخروج</button></header>
+  <section class="grid">
+    <div class="card stat">التلاميذ<strong id="studentsCount">0</strong></div>
+    <div class="card stat">الحجوزات<strong id="bookingsCount">0</strong></div>
+    <div class="card stat">المدفوعات المؤكدة<strong id="paidCount">0</strong></div>
+    <div class="card stat">دخلك الإجمالي<strong id="revenue">0 دج</strong></div>
+  </section>
+  <section class="card">
+    <div class="row" style="justify-content:space-between"><div><h2>أفواجي</h2><p class="muted">هذه القائمة تخص حسابك فقط.</p></div><button class="btn" id="addGroup">＋ إضافة فوج</button></div>
+    <div id="groups" class="grid"></div>
+  </section>
+  <section class="card hidden" id="studentsPanel">
+    <div class="row" style="justify-content:space-between"><div><h2 id="groupTitle">تلاميذ الفوج</h2><p class="muted" id="groupMeta"></p></div><button class="btn light" id="refreshGroup">تحديث</button></div>
+    <div class="grid">
+      <div class="stat">الحجوزات<strong id="groupBookings">0</strong></div>
+      <div class="stat">مدفوع<strong id="groupPaid">0</strong></div>
+      <div class="stat">غير مدفوع<strong id="groupUnpaid">0</strong></div>
+      <div class="stat">دخل الفوج<strong id="groupRevenue">0 دج</strong></div>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>التلميذ</th><th>العمر</th><th>تاريخ الحصة</th><th>الدفع</th><th>المبلغ</th><th>الإجراء</th></tr></thead><tbody id="studentRows"></tbody></table></div>
+  </section>
+  <section class="card">
+    <h2>سجل المدفوعات</h2>
+    <p class="muted">سجل الحصص والمدفوعات التابعة لأفواجك فقط.</p>
+    <div class="table-wrap"><table><thead><tr><th>التلميذ</th><th>الفوج</th><th>تاريخ الحصة</th><th>حالة الدفع</th><th>تاريخ التأكيد</th><th>المبلغ</th></tr></thead><tbody id="paymentRows"></tbody></table></div>
+  </section>
+</div></main>
+<script src="teacher.js"></script></body></html>

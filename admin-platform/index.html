@@ -162,7 +162,7 @@
                 <thead>
                   <tr><th>الأستاذ</th><th>المادة</th><th>المستوى</th><th>الأفواج</th><th>الحالة</th><th>الملف</th></tr>
                 </thead>
-                <tbody>
+                <tbody id="teachersTableBody">
                   <tr>
                     <td><div class="person-cell"><span class="table-avatar">ب</span><b>الأستاذ بومدين</b></div></td>
                     <td>علوم الطبيعة والحياة</td><td>الثانوي</td><td>05</td>
@@ -407,7 +407,12 @@
             <span class="muted-chip">قيد التطوير</span>
           </div>
           <article class="panel notification-settings">
-            <div class="setting-row"><div><b>تذكير قبل الحصة</b><p>إرسال تذكير للتلميذ قبل موعد الحصة بنصف ساعة.</p></div><span class="switch off">غير مفعّل</span></div>
+            <div style="padding:18px 0 22px">
+              <h3>إرسال إشعار جديد</h3>
+              <p>يمكن للإدارة إرسال إعلان يظهر في فضاء التلاميذ.</p>
+              <button class="primary-btn" id="sendAdminNotification" type="button">＋ إنشاء إشعار</button>
+            </div>
+            <div class="setting-row"><div><b>تذكير قبل الحصة</b><p>إرسال تذكير للتلميذ قبل موعد الحصة بنصف ساعة. يتطلب إعداد Web Push.</p></div><span class="switch off">يتطلب الإعداد</span></div>
             <div class="setting-row"><div><b>تقييم بعد الحصة</b><p>إرسال طلب تقييم بعد انتهاء الحصة.</p></div><span class="switch off">غير مفعّل</span></div>
             <div class="setting-row"><div><b>إشعارات الإدارة</b><p>التنبيه عند تسجيل تلميذ جديد أو تحديث الدفع.</p></div><span class="switch off">غير مفعّل</span></div>
           </article>

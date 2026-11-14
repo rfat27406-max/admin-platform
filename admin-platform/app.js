@@ -22,6 +22,8 @@
 
   let toastTimer;
   let selectedTeacherGroupId = null;
+  const ADMIN_TOKEN_KEY = "madrasati_admin_token_v2";
+  let adminToken = sessionStorage.getItem(ADMIN_TOKEN_KEY) || "";
   let teacherGroupsCache = [];
 
   function showToast(message) {
@@ -42,6 +44,7 @@
       ...options,
       headers: {
         "Content-Type": "application/json",
+        ...(adminToken ? { Authorization: `Bearer ${adminToken}` } : {}),
         ...(options.headers || {})
       }
     });
@@ -61,6 +64,60 @@
     }
 
     return payload;
+  }
+
+  async function showAdminLogin() {
+    return new Promise(resolve => {
+      const overlay = document.createElement("div");
+      overlay.style.cssText = "position:fixed;inset:0;z-index:99999;background:#081329ee;display:grid;place-items:center;padding:20px;";
+      overlay.innerHTML = `
+        <form id="adminLoginForm" style="width:min(420px,100%);background:#fff;color:#17233d;border-radius:22px;padding:28px;box-shadow:0 24px 80px #0005;font-family:inherit">
+          <div style="font-size:34px;margin-bottom:8px">🔐</div>
+          <h2 style="margin:0 0 8px">دخول الإدارة</h2>
+          <p style="color:#64748b;margin:0 0 20px">أدخل رمز المرور للمتابعة إلى لوحة الإدارة.</p>
+          <input id="adminLoginPassword" type="password" inputmode="numeric" autocomplete="current-password" placeholder="رمز الإدارة" required style="width:100%;box-sizing:border-box;padding:14px;border:1px solid #cbd5e1;border-radius:12px;font:inherit">
+          <p id="adminLoginError" style="color:#dc2626;min-height:22px"></p>
+          <button type="submit" style="width:100%;padding:14px;border:0;border-radius:12px;background:#1d4ed8;color:white;font:inherit;font-weight:700;cursor:pointer">دخول آمن</button>
+        </form>`;
+      document.body.appendChild(overlay);
+      const form = overlay.querySelector("#adminLoginForm");
+      form.addEventListener("submit", async event => {
+        event.preventDefault();
+        const button = form.querySelector("button");
+        const errorNode = overlay.querySelector("#adminLoginError");
+        button.disabled = true;
+        try {
+          const response = await fetch(`${API_BASE}/api/admin/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ password: overlay.querySelector("#adminLoginPassword").value })
+          });
+          const payload = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(payload.error || "تعذر تسجيل الدخول.");
+          adminToken = payload.access_token;
+          sessionStorage.setItem(ADMIN_TOKEN_KEY, adminToken);
+          overlay.remove();
+          resolve(true);
+        } catch (error) {
+          errorNode.textContent = error.message;
+          button.disabled = false;
+        }
+      });
+      overlay.querySelector("#adminLoginPassword").focus();
+    });
+  }
+
+  async function ensureAdminSession() {
+    if (adminToken) {
+      try {
+        await apiRequest("/api/admin/summary");
+        return true;
+      } catch {
+        adminToken = "";
+        sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+      }
+    }
+    return showAdminLogin();
   }
 
   function navigate(page) {
@@ -98,6 +155,20 @@
     });
   });
 
+  document.getElementById("sendAdminNotification")?.addEventListener("click", async () => {
+    const title = prompt("عنوان الإشعار:");
+    if (!title) return;
+    const message = prompt("نص الإشعار:");
+    if (!message) return;
+    try {
+      await apiRequest("/api/admin/notifications", {
+        method: "POST",
+        body: JSON.stringify({ title, message, audience: "all" })
+      });
+      showToast("تم نشر الإشعار في فضاء التلاميذ.");
+    } catch (error) { showToast(error.message); }
+  });
+
   document.getElementById("menuToggle")?.addEventListener("click", () => {
     sidebar?.classList.toggle("open");
   });
@@ -106,12 +177,44 @@
     navigate("notifications");
   });
 
-  document.getElementById("addTeacher")?.addEventListener("click", () => {
-    showToast("إضافة الأستاذ ستُفعّل في مرحلة إدارة الأساتذة.");
+  document.getElementById("addTeacher")?.addEventListener("click", async () => {
+    const name = prompt("اسم الأستاذ:");
+    if (!name) return;
+    const subject = prompt("المادة:");
+    if (!subject) return;
+    const level = prompt("المستوى الدراسي (مثال: الطور الثانوي):", "الطور الثانوي");
+    if (!level) return;
+    const password = prompt("كلمة مرور فضاء الأستاذ (6 أحرف على الأقل):");
+    if (!password) return;
+    try {
+      const result = await apiRequest("/api/admin/teachers", {
+        method: "POST",
+        body: JSON.stringify({ name, subject, education_level: level, password })
+      });
+      showToast(`تم إنشاء فضاء ${name}. الدخول عبر teacher.html?teacher=${result.teacher.id} · المعرّف: ${result.teacher.id}`);
+      await loadTeachersTable();
+    } catch (error) { showToast(error.message); }
   });
 
-  document.getElementById("addGroup")?.addEventListener("click", () => {
-    showToast("إضافة فوج ستُفعّل في مرحلة إدارة الأفواج.");
+  document.getElementById("addGroup")?.addEventListener("click", async () => {
+    try {
+      const { teachers = [] } = await apiRequest("/api/teachers");
+      const choices = teachers.map(t => `${t.id} = ${t.name}`).join("\\n");
+      const teacherId = prompt(`معرّف الأستاذ الذي سيملك الفوج:\\n${choices}`, teachers[0]?.id || "");
+      if (!teacherId) return;
+      const name = prompt("اسم الفوج:");
+      if (!name) return;
+      const weekday = prompt("اليوم: friday أو saturday", "friday");
+      const start_time = prompt("وقت البداية بصيغة HH:MM", "08:00");
+      const end_time = prompt("وقت النهاية بصيغة HH:MM", "10:00");
+      const price_dzd = Number(prompt("سعر الحصة بالدينار:", "300"));
+      await apiRequest("/api/admin/groups", {
+        method: "POST",
+        body: JSON.stringify({ teacher_id: teacherId, name, weekday, start_time, end_time, price_dzd })
+      });
+      showToast("تمت إضافة الفوج بنجاح.");
+      await loadGroupsFromServer();
+    } catch (error) { showToast(error.message); }
   });
 
   document.addEventListener("keydown", event => {
@@ -175,9 +278,9 @@
           <td><b>${escapeHTML(groupName(group.name))}</b></td>
           <td>${escapeHTML(weekdayArabic(group.weekday))}</td>
           <td>${escapeHTML(group.start_time)} — ${escapeHTML(group.end_time)}</td>
-          <td>بومدين</td>
+          <td>${escapeHTML(group.teacher_name || "—")}</td>
           <td>${escapeHTML(group.price_dzd)} دج</td>
-          <td>علوم طبيعية</td>
+          <td>${escapeHTML(group.subject || "—")}</td>
         </tr>
       `).join("");
 
@@ -214,7 +317,7 @@
               <b>${escapeHTML(groupName(group.name))}</b>
               <small>${escapeHTML(group.start_time)} — ${escapeHTML(group.end_time)}</small>
             </div>
-            <span class="subject">علوم طبيعية</span>
+            <span class="subject">${escapeHTML(group.subject || "—")}</span>
           </div>
         `).join("") ||
           '<p class="empty-hint">لا توجد أفواج نشطة حالياً.</p>';
@@ -244,6 +347,35 @@
       showToast("تعذر تحميل الأفواج من السيرفر.");
     }
   }
+
+  async function loadTeachersTable() {
+    try {
+      const { teachers = [] } = await apiRequest("/api/teachers");
+      const tbody = document.getElementById("teachersTableBody");
+      if (!tbody) return;
+      tbody.innerHTML = teachers.map(teacher => `
+        <tr>
+          <td><div class="person-cell"><span class="table-avatar">${escapeHTML((teacher.name || "أ").slice(0,1))}</span><b>${escapeHTML(teacher.name)}</b></div></td>
+          <td>${escapeHTML(teacher.subject)}</td><td>${escapeHTML(teacher.education_level)}</td>
+          <td>—</td><td><span class="status status-active">نشط</span></td>
+          <td><button class="text-btn" type="button" data-set-teacher-password="${escapeHTML(teacher.id)}">تعيين كلمة المرور</button></td>
+        </tr>
+      `).join("");
+    } catch (error) { showToast(error.message); }
+  }
+
+  document.getElementById("teachersTableBody")?.addEventListener("click", async event => {
+    const button = event.target.closest("[data-set-teacher-password]");
+    if (!button) return;
+    const password = prompt("كلمة المرور الجديدة للأستاذ (6 أحرف على الأقل):");
+    if (!password) return;
+    try {
+      await apiRequest(`/api/admin/teachers/${encodeURIComponent(button.dataset.setTeacherPassword)}/password`, {
+        method: "POST", body: JSON.stringify({ password })
+      });
+      showToast("تم تحديث كلمة المرور.");
+    } catch (error) { showToast(error.message); }
+  });
 
   // ==========================================
   // تحميل التلاميذ في لوحة الإدارة العامة
@@ -317,21 +449,25 @@
   // ==========================================
 
   async function loadTeacherSummary() {
-    const payload = await apiRequest("/api/teacher/summary");
-    const summary = payload.summary || {};
+    const [teacherPayload, adminPayload] = await Promise.all([
+      apiRequest("/api/teacher/summary"),
+      apiRequest("/api/admin/summary")
+    ]);
+    const summary = teacherPayload.summary || {};
+    const all = adminPayload.summary || {};
 
     setText("teacherStudentsCount", summary.students_count ?? 0);
     setText("teacherBookingsCount", summary.bookings_count ?? 0);
     setText("teacherPaidCount", summary.paid_count ?? 0);
     setText("teacherRevenue", formatMoney(summary.total_revenue));
 
-    // تحديث لوحة الإدارة العامة
-    setText("dashboardRevenue", formatMoney(summary.total_revenue));
-
-    // تحديث صفحة المدفوعات
-    setText("adminPaidCount", summary.paid_count ?? 0);
-    setText("adminRevenue", formatMoney(summary.total_revenue));
-    setText("adminUnpaidCount", summary.unpaid_count ?? 0);
+    // إجمالي المؤسسة يجمع مداخيل جميع الأساتذة.
+    setText("dashboardRevenue", formatMoney(all.total_revenue));
+    setText("adminPaidCount", all.paid_count ?? 0);
+    setText("adminRevenue", formatMoney(all.total_revenue));
+    setText("adminUnpaidCount", all.unpaid_count ?? 0);
+    setText("dashboardTeachersCount", all.teachers_count ?? 0);
+    setText("dashboardGroupsCount", all.groups_count ?? 0);
 
     return summary;
   }
@@ -589,10 +725,14 @@
   // تشغيل تحميل البيانات
   // ==========================================
 
-  loadGroupsFromServer();
-  loadStudentsFromServer();
-  loadTeacherSummary().catch(error => {
-    console.error("تعذر تحميل الملخص المالي:", error);
-  });
+  (async () => {
+    await ensureAdminSession();
+    await Promise.all([
+      loadGroupsFromServer(),
+      loadStudentsFromServer(),
+      loadTeachersTable(),
+      loadTeacherSummary().catch(error => console.error("تعذر تحميل الملخص المالي:", error))
+    ]);
+  })();
 
 })();
