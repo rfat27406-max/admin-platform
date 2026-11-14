@@ -47,4 +47,97 @@
   document.addEventListener("keydown", event => {
     if (event.key === "Escape") sidebar.classList.remove("open");
   });
+
+
+  // Live read-only connection to the school Worker.
+  // This reads the public active-groups endpoint; admin mutations will be added later.
+  const API_BASE = "https://school-server.rfat27406.workers.dev";
+
+  function escapeHTML(value) {
+    return String(value ?? "").replace(/[&<>"']/g, char => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    })[char]);
+  }
+
+  function weekdayArabic(value) {
+    if (value === "friday") return "الجمعة";
+    if (value === "saturday") return "السبت";
+    return value || "—";
+  }
+
+  function groupName(value) {
+    const name = String(value || "");
+    return name.startsWith("الفوج") ? name : (name ? `الفوج ${name}` : "فوج");
+  }
+
+  async function loadGroupsFromServer() {
+    try {
+      const response = await fetch(`${API_BASE}/api/groups`, {
+        method: "GET",
+        headers: { "Accept": "application/json" }
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const payload = await response.json();
+      const groups = Array.isArray(payload.groups) ? payload.groups : [];
+
+      const groupRows = groups.map(group => `
+        <tr>
+          <td><b>${escapeHTML(groupName(group.name))}</b></td>
+          <td>${escapeHTML(weekdayArabic(group.weekday))}</td>
+          <td>${escapeHTML(group.start_time)} — ${escapeHTML(group.end_time)}</td>
+          <td>بومدين</td>
+          <td>${escapeHTML(group.price_dzd)} دج</td>
+          <td>علوم طبيعية</td>
+        </tr>`).join("");
+
+      const groupTbody = document.querySelector("#page-groups table tbody");
+      if (groupTbody) {
+        groupTbody.innerHTML = groupRows || '<tr><td colspan="6">لا توجد أفواج نشطة حالياً.</td></tr>';
+      }
+
+      const profileTbody = document.querySelector("#page-teacher-profile table tbody");
+      if (profileTbody) {
+        profileTbody.innerHTML = groups.map(group => `
+          <tr>
+            <td><b>${escapeHTML(groupName(group.name))}</b></td>
+            <td>${escapeHTML(weekdayArabic(group.weekday))}</td>
+            <td>${escapeHTML(group.start_time)} — ${escapeHTML(group.end_time)}</td>
+            <td>علوم طبيعية</td>
+            <td>${escapeHTML(group.price_dzd)} دج</td>
+            <td><span class="status status-active">نشط</span></td>
+          </tr>`).join("") || '<tr><td colspan="6">لا توجد أفواج نشطة حالياً.</td></tr>';
+      }
+
+      const scheduleList = document.querySelector("#page-dashboard .schedule-list");
+      if (scheduleList) {
+        scheduleList.innerHTML = groups.map(group => `
+          <div class="schedule-row">
+            <span class="day-badge">${escapeHTML(weekdayArabic(group.weekday))}</span>
+            <div class="schedule-info">
+              <b>${escapeHTML(groupName(group.name))}</b>
+              <small>${escapeHTML(group.start_time)} — ${escapeHTML(group.end_time)}</small>
+            </div>
+            <span class="subject">علوم طبيعية</span>
+          </div>`).join("") || '<p class="empty-hint">لا توجد أفواج نشطة حالياً.</p>';
+      }
+
+      const groupCount = document.querySelector("#page-teacher-profile .profile-stats .stat-card strong");
+      if (groupCount) groupCount.textContent = String(groups.length).padStart(2, "0");
+
+      const dashboardGroupStat = [...document.querySelectorAll("#page-dashboard .stat-card")]
+        .find(card => card.querySelector(".stat-label")?.textContent.trim() === "الأفواج");
+      if (dashboardGroupStat) {
+        const value = dashboardGroupStat.querySelector("strong");
+        if (value) value.textContent = String(groups.length).padStart(2, "0");
+      }
+
+      showToast("تم تحميل الأفواج من قاعدة بيانات المدرسة.");
+    } catch (error) {
+      console.error("تعذر تحميل الأفواج:", error);
+      showToast("تعذر الاتصال بالسيرفر. تحقق من إعداد CORS ونشر Worker.");
+    }
+  }
+
+  loadGroupsFromServer();
+
 })();
