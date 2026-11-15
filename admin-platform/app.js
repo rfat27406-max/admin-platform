@@ -25,6 +25,7 @@
   const ADMIN_TOKEN_KEY = "madrasati_admin_token_v2";
   let adminToken = sessionStorage.getItem(ADMIN_TOKEN_KEY) || "";
   let teacherGroupsCache = [];
+  let selectedTeacherId = "teacher-boumediene";
 
   function showToast(message) {
     if (!toast) return;
@@ -64,6 +65,15 @@
     }
 
     return payload;
+  }
+
+  function teacherApiPath(path) {
+    const separator = path.includes("?") ? "&" : "?";
+    return `${path}${separator}teacher_id=${encodeURIComponent(selectedTeacherId)}`;
+  }
+
+  async function teacherApiRequest(path, options = {}) {
+    return apiRequest(teacherApiPath(path), options);
   }
 
   async function showAdminLogin() {
@@ -156,18 +166,47 @@
   });
 
   document.getElementById("sendAdminNotification")?.addEventListener("click", async () => {
-    const title = prompt("عنوان الإشعار:");
-    if (!title) return;
-    const message = prompt("نص الإشعار:");
-    if (!message) return;
+    const title = document.getElementById("adminNotificationTitle")?.value.trim();
+    const message = document.getElementById("adminNotificationMessage")?.value.trim();
+    const audience = document.getElementById("adminNotificationAudience")?.value || "all";
+    const studentId = document.getElementById("adminNotificationStudent")?.value || "";
+
+    if (!title || !message) {
+      showToast("أدخل عنوان الإشعار ونصه أولاً.");
+      return;
+    }
+    if (audience === "student" && !studentId) {
+      showToast("اختر التلميذ الذي تريد إرسال الإشعار إليه.");
+      return;
+    }
+
+    const button = document.getElementById("sendAdminNotification");
+    if (button) { button.disabled = true; button.textContent = "جارٍ النشر..."; }
+
     try {
-      await apiRequest("/api/admin/notifications", {
+      const result = await apiRequest("/api/admin/notifications", {
         method: "POST",
-        body: JSON.stringify({ title, message, audience: "all" })
+        body: JSON.stringify({
+          title, message, audience,
+          ...(audience === "student" ? { student_id: studentId } : {})
+        })
       });
-      showToast("تم نشر الإشعار في فضاء التلاميذ.");
-    } catch (error) { showToast(error.message); }
+      showToast(result.message || "تم نشر الإشعار داخل المنصة.");
+      document.getElementById("adminNotificationTitle").value = "";
+      document.getElementById("adminNotificationMessage").value = "";
+      await loadAdminNotifications();
+    } catch (error) {
+      showToast(error.message);
+    } finally {
+      if (button) { button.disabled = false; button.textContent = "＋ نشر الإشعار"; }
+    }
   });
+
+  document.getElementById("adminNotificationAudience")?.addEventListener("change", event => {
+    const row = document.getElementById("adminNotificationStudentRow");
+    if (row) row.classList.toggle("hidden", event.target.value !== "student");
+  });
+
 
   document.getElementById("menuToggle")?.addEventListener("click", () => {
     sidebar?.classList.toggle("open");
@@ -191,8 +230,11 @@
         method: "POST",
         body: JSON.stringify({ name, subject, education_level: level, password })
       });
-      showToast(`تم إنشاء فضاء ${name}. الدخول عبر teacher.html?teacher=${result.teacher.id} · المعرّف: ${result.teacher.id}`);
+      showToast(`تم إنشاء فضاء ${name}. رابط الدخول: teacher.html?teacher=${result.teacher.id}`);
+      selectedTeacherId = result.teacher.id;
       await loadTeachersTable();
+      const selector = document.getElementById("teacherSpaceSelect");
+      if (selector) selector.value = selectedTeacherId;
     } catch (error) { showToast(error.message); }
   });
 
@@ -357,12 +399,44 @@
         <tr>
           <td><div class="person-cell"><span class="table-avatar">${escapeHTML((teacher.name || "أ").slice(0,1))}</span><b>${escapeHTML(teacher.name)}</b></div></td>
           <td>${escapeHTML(teacher.subject)}</td><td>${escapeHTML(teacher.education_level)}</td>
-          <td>—</td><td><span class="status status-active">نشط</span></td>
-          <td><button class="text-btn" type="button" data-set-teacher-password="${escapeHTML(teacher.id)}">تعيين كلمة المرور</button></td>
+          <td>${escapeHTML(teacher.groups_count ?? 0)}</td>
+          <td><span class="status status-active">نشط</span></td>
+          <td>
+            <button class="text-btn" type="button" data-open-teacher-space="${escapeHTML(teacher.id)}">فتح الفضاء</button>
+            <button class="text-btn" type="button" data-set-teacher-password="${escapeHTML(teacher.id)}">كلمة المرور</button>
+          </td>
         </tr>
-      `).join("");
+      `).join("") || '<tr><td colspan="6">لا يوجد أساتذة بعد.</td></tr>';
+
+      const selector = document.getElementById("teacherSpaceSelect");
+      if (selector) {
+        const previous = selectedTeacherId;
+        selector.innerHTML = teachers.map(teacher =>
+          `<option value="${escapeHTML(teacher.id)}">${escapeHTML(teacher.name)} · ${escapeHTML(teacher.subject)}</option>`
+        ).join("");
+        if (teachers.some(teacher => teacher.id === previous)) {
+          selector.value = previous;
+        } else if (teachers.length) {
+          selectedTeacherId = teachers[0].id;
+          selector.value = selectedTeacherId;
+        }
+      }
     } catch (error) { showToast(error.message); }
   }
+
+  document.getElementById("teachersTableBody")?.addEventListener("click", event => {
+    const button = event.target.closest("[data-open-teacher-space]");
+    if (!button) return;
+    selectedTeacherId = button.dataset.openTeacherSpace;
+    const selector = document.getElementById("teacherSpaceSelect");
+    if (selector) selector.value = selectedTeacherId;
+    navigate("teacher-space");
+  });
+
+  document.getElementById("teacherSpaceSelect")?.addEventListener("change", event => {
+    selectedTeacherId = event.target.value;
+    loadTeacherSpace();
+  });
 
   document.getElementById("teachersTableBody")?.addEventListener("click", async event => {
     const button = event.target.closest("[data-set-teacher-password]");
@@ -376,6 +450,39 @@
       showToast("تم تحديث كلمة المرور.");
     } catch (error) { showToast(error.message); }
   });
+
+  async function loadAdminNotifications() {
+    const list = document.getElementById("adminNotificationsList");
+    if (!list) return;
+    try {
+      const [{ notifications = [] }, { students = [] }] = await Promise.all([
+        apiRequest("/api/admin/notifications"),
+        apiRequest("/api/admin/students")
+      ]);
+
+      const studentSelect = document.getElementById("adminNotificationStudent");
+      if (studentSelect) {
+        const current = studentSelect.value;
+        studentSelect.innerHTML = '<option value="">اختر التلميذ</option>' +
+          students.map(student =>
+            `<option value="${escapeHTML(student.id)}">${escapeHTML(student.first_name)} ${escapeHTML(student.last_name)}</option>`
+          ).join("");
+        if (students.some(student => student.id === current)) studentSelect.value = current;
+      }
+
+      list.innerHTML = notifications.map(item => `
+        <article class="notification-history-item" style="padding:14px;border:1px solid #e5eaf2;border-radius:12px;margin-top:10px">
+          <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <b>${escapeHTML(item.title)}</b>
+            <small>${escapeHTML(item.recipient_name || "المستلم")} · ${escapeHTML(formatDate(item.created_at))}</small>
+          </div>
+          <p style="margin:8px 0 0;white-space:pre-wrap">${escapeHTML(item.message)}</p>
+        </article>
+      `).join("") || '<p class="empty-hint">لا توجد إشعارات منشورة بعد.</p>';
+    } catch (error) {
+      list.innerHTML = `<p class="empty-hint">${escapeHTML(error.message)}</p>`;
+    }
+  }
 
   // ==========================================
   // تحميل التلاميذ في لوحة الإدارة العامة
@@ -450,7 +557,7 @@
 
   async function loadTeacherSummary() {
     const [teacherPayload, adminPayload] = await Promise.all([
-      apiRequest("/api/teacher/summary"),
+      teacherApiRequest("/api/teacher/summary"),
       apiRequest("/api/admin/summary")
     ]);
     const summary = teacherPayload.summary || {};
@@ -477,7 +584,7 @@
   // ==========================================
 
   async function loadTeacherGroups() {
-    const payload = await apiRequest("/api/teacher/groups");
+    const payload = await teacherApiRequest("/api/teacher/groups");
     teacherGroupsCache = Array.isArray(payload.groups) ? payload.groups : [];
 
     const container = document.getElementById("teacherGroupsGrid");
@@ -548,7 +655,7 @@
 
     try {
       const payload = await apiRequest(
-        `/api/teacher/groups/${encodeURIComponent(groupId)}/students`
+        teacherApiPath(`/api/teacher/groups/${encodeURIComponent(groupId)}/students`)
       );
 
       const students = Array.isArray(payload.students) ? payload.students : [];
@@ -643,7 +750,7 @@
 
     try {
       const payload = await apiRequest(
-        `/api/teacher/bookings/${encodeURIComponent(bookingId)}/pay`,
+        teacherApiPath(`/api/teacher/bookings/${encodeURIComponent(bookingId)}/pay`),
         { method: "POST" }
       );
 
@@ -705,6 +812,10 @@
 
   async function loadTeacherSpace() {
     const grid = document.getElementById("teacherGroupsGrid");
+    const selectedOption = document.getElementById("teacherSpaceSelect")?.selectedOptions?.[0];
+    const heading = document.getElementById("teacherSpaceHeading");
+    if (heading) heading.textContent = `فضاء ${selectedOption?.textContent.split(" · ")[0] || "الأستاذ"}`;
+    teacherGroupsCache = [];
 
     if (grid && teacherGroupsCache.length === 0) {
       grid.innerHTML = "<p>جارٍ تحميل الأفواج...</p>";
@@ -731,6 +842,7 @@
       loadGroupsFromServer(),
       loadStudentsFromServer(),
       loadTeachersTable(),
+      loadAdminNotifications(),
       loadTeacherSummary().catch(error => console.error("تعذر تحميل الملخص المالي:", error))
     ]);
   })();

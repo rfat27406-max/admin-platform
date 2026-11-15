@@ -160,7 +160,7 @@
             <div class="table-wrap">
               <table>
                 <thead>
-                  <tr><th>الأستاذ</th><th>المادة</th><th>المستوى</th><th>الأفواج</th><th>الحالة</th><th>الملف</th></tr>
+                  <tr><th>الأستاذ</th><th>المادة</th><th>المستوى</th><th>الأفواج</th><th>الحالة</th><th>الإجراءات</th></tr>
                 </thead>
                 <tbody id="teachersTableBody">
                   <tr>
@@ -179,10 +179,15 @@
         <section class="page" id="page-teacher-space">
           <div class="section-heading">
             <div>
-              <h2>فضاء الأستاذ بومدين</h2>
-              <p>إدارة الأفواج والتلاميذ وتأكيد دفع الحصص</p>
+              <h2 id="teacherSpaceHeading">فضاء الأستاذ بومدين</h2>
+              <p>اختر الأستاذ لعرض أفواجه وتلاميذه ومدفوعاته بشكل مستقل</p>
             </div>
-            <span class="muted-chip">متصل بقاعدة البيانات</span>
+            <label class="teacher-space-picker" style="display:flex;gap:8px;align-items:center">
+              <span>الأستاذ:</span>
+              <select id="teacherSpaceSelect" style="padding:10px 12px;border:1px solid #dbe3ef;border-radius:10px;min-width:220px;font:inherit">
+                <option value="teacher-boumediene">الأستاذ بومدين</option>
+              </select>
+            </label>
           </div>
 
           <div class="stats-grid compact-stats">
@@ -272,7 +277,7 @@
         <!-- الأفواج -->
         <section class="page" id="page-groups">
           <div class="section-heading">
-            <div><h2>الأفواج والحصص</h2><p>البرنامج الأسبوعي للأستاذ بومدين</p></div>
+            <div><h2>الأفواج والحصص</h2><p>البرنامج الأسبوعي لجميع الأساتذة</p></div>
             <button class="primary-btn" id="addGroup">＋ إضافة فوج</button>
           </div>
 
@@ -403,18 +408,36 @@
         <!-- الإشعارات -->
         <section class="page" id="page-notifications">
           <div class="section-heading">
-            <div><h2>الإشعارات</h2><p>إعداد رسائل التذكير والتنبيهات</p></div>
-            <span class="muted-chip">قيد التطوير</span>
+            <div><h2>الإشعارات</h2><p>نشر الإعلانات ومتابعة سجل الإشعارات داخل المنصة</p></div>
+            <span class="status status-active">الإشعارات الداخلية مفعّلة</span>
           </div>
           <article class="panel notification-settings">
             <div style="padding:18px 0 22px">
               <h3>إرسال إشعار جديد</h3>
-              <p>يمكن للإدارة إرسال إعلان يظهر في فضاء التلاميذ.</p>
-              <button class="primary-btn" id="sendAdminNotification" type="button">＋ إنشاء إشعار</button>
+              <p>سيظهر الإشعار في مركز الإشعارات داخل حساب التلميذ.</p>
+              <label style="display:block;margin:12px 0">عنوان الإشعار
+                <input id="adminNotificationTitle" maxlength="120" placeholder="مثال: تغيير توقيت الحصة" style="display:block;width:100%;margin-top:7px;padding:12px;border:1px solid #dbe3ef;border-radius:10px;font:inherit">
+              </label>
+              <label style="display:block;margin:12px 0">نص الإشعار
+                <textarea id="adminNotificationMessage" rows="4" maxlength="2000" placeholder="اكتب تفاصيل الإعلان..." style="display:block;width:100%;margin-top:7px;padding:12px;border:1px solid #dbe3ef;border-radius:10px;font:inherit;resize:vertical"></textarea>
+              </label>
+              <label style="display:block;margin:12px 0">المستلم
+                <select id="adminNotificationAudience" style="display:block;width:100%;margin-top:7px;padding:12px;border:1px solid #dbe3ef;border-radius:10px;font:inherit">
+                  <option value="all">جميع التلاميذ</option>
+                  <option value="student">تلميذ محدد</option>
+                </select>
+              </label>
+              <label id="adminNotificationStudentRow" class="hidden" style="display:block;margin:12px 0">اختر التلميذ
+                <select id="adminNotificationStudent" style="display:block;width:100%;margin-top:7px;padding:12px;border:1px solid #dbe3ef;border-radius:10px;font:inherit">
+                  <option value="">جارٍ تحميل التلاميذ...</option>
+                </select>
+              </label>
+              <button class="primary-btn" id="sendAdminNotification" type="button">＋ نشر الإشعار</button>
             </div>
-            <div class="setting-row"><div><b>تذكير قبل الحصة</b><p>إرسال تذكير للتلميذ قبل موعد الحصة بنصف ساعة. يتطلب إعداد Web Push.</p></div><span class="switch off">يتطلب الإعداد</span></div>
-            <div class="setting-row"><div><b>تقييم بعد الحصة</b><p>إرسال طلب تقييم بعد انتهاء الحصة.</p></div><span class="switch off">غير مفعّل</span></div>
-            <div class="setting-row"><div><b>إشعارات الإدارة</b><p>التنبيه عند تسجيل تلميذ جديد أو تحديث الدفع.</p></div><span class="switch off">غير مفعّل</span></div>
+            <div class="setting-row"><div><b>إشعارات داخل المنصة</b><p>تُحفظ في قاعدة البيانات وتظهر عند فتح التلميذ لمركز الإشعارات.</p></div><span class="switch">مفعّلة</span></div>
+            <div class="setting-row"><div><b>إشعار فوري عند إغلاق الموقع</b><p>يتطلب إعداد Web Push ومفاتيح VAPID وService Worker وجدولة مستقلة؛ ليس مفعّلاً في هذه النسخة.</p></div><span class="switch off">غير مفعّل</span></div>
+            <h3 style="margin-top:22px">سجل الإشعارات المنشورة</h3>
+            <div id="adminNotificationsList"><p class="empty-hint">جارٍ تحميل سجل الإشعارات...</p></div>
           </article>
         </section>
 
