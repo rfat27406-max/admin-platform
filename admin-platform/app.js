@@ -551,6 +551,47 @@
     }
   }
 
+  async function loadRegistrationRequests() {
+    const tbody = document.getElementById("registrationRequestsBody");
+    if (!tbody) return;
+    try {
+      const payload = await apiRequest("/api/admin/registration-requests");
+      const requests = Array.isArray(payload.requests) ? payload.requests : [];
+      setText("registrationRequestsCount", `${requests.length} طلبات`);
+      tbody.innerHTML = requests.map(request => `
+        <tr>
+          <td><b>${escapeHTML(request.first_name)} ${escapeHTML(request.last_name)}</b></td>
+          <td>${escapeHTML(request.age)} سنة</td>
+          <td>${formatDate(request.created_at)}</td>
+          <td class="registration-actions">
+            <button class="primary-btn" data-registration-decision="approve" data-registration-id="${escapeHTML(request.id)}">موافقة</button>
+            <button class="outline-btn" data-registration-decision="reject" data-registration-id="${escapeHTML(request.id)}">رفض</button>
+          </td>
+        </tr>`).join("") || '<tr><td colspan="4">لا توجد طلبات جديدة حالياً.</td></tr>';
+    } catch (error) {
+      tbody.innerHTML = `<tr><td colspan="4">${escapeHTML(error.message)}</td></tr>`;
+    }
+  }
+
+  document.getElementById("registrationRequestsBody")?.addEventListener("click", async event => {
+    const button = event.target.closest("[data-registration-decision]");
+    if (!button) return;
+    const decision = button.dataset.registrationDecision;
+    const label = decision === "approve" ? "الموافقة على هذا التلميذ؟" : "رفض طلب التسجيل؟";
+    if (!confirm(label)) return;
+    button.disabled = true;
+    try {
+      await apiRequest(`/api/admin/registration-requests/${encodeURIComponent(button.dataset.registrationId)}/decision`, {
+        method: "POST", body: JSON.stringify({ decision })
+      });
+      showToast(decision === "approve" ? "تمت الموافقة وتفعيل الحساب." : "تم رفض الطلب.");
+      await Promise.all([loadRegistrationRequests(), loadStudentsFromServer()]);
+    } catch (error) {
+      showToast(error.message);
+      button.disabled = false;
+    }
+  });
+
   // ==========================================
   // فضاء الأستاذ: الملخص المالي
   // ==========================================
@@ -841,6 +882,7 @@
     await Promise.all([
       loadGroupsFromServer(),
       loadStudentsFromServer(),
+      loadRegistrationRequests(),
       loadTeachersTable(),
       loadAdminNotifications(),
       loadTeacherSummary().catch(error => console.error("تعذر تحميل الملخص المالي:", error))
