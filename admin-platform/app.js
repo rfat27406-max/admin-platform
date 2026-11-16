@@ -488,28 +488,6 @@
   // تحميل التلاميذ في لوحة الإدارة العامة
   // ==========================================
 
-  document.getElementById("studentsTableBody")?.addEventListener("click", async event => {
-    const approve = event.target.closest("[data-student-approve]");
-    const reject = event.target.closest("[data-student-reject]");
-    const button = approve || reject;
-    if (!button) return;
-    const action = approve ? "approve" : "reject";
-    const studentId = button.dataset[approve ? "studentApprove" : "studentReject"];
-    const promptText = action === "approve"
-      ? "هل تريد قبول طلب تفعيل هذا التلميذ؟"
-      : "هل تريد رفض طلب تفعيل هذا التلميذ؟";
-    if (!window.confirm(promptText)) return;
-    button.disabled = true;
-    try {
-      const result = await apiRequest(`/api/admin/students/${encodeURIComponent(studentId)}/${action}`, { method: "POST" });
-      showToast(result.message || "تم تحديث طلب التلميذ.");
-      await loadStudentsFromServer();
-    } catch (error) {
-      showToast(error.message);
-      button.disabled = false;
-    }
-  });
-
   async function loadStudentsFromServer() {
     try {
       const payload = await apiRequest("/api/admin/students");
@@ -525,11 +503,6 @@
             </td>
             <td>${escapeHTML(student.age)} سنة</td>
             <td>${formatDate(student.created_at)}</td>
-            <td>
-              <span class="status ${student.approval_status === "approved" ? "status-active" : "status-pending"}">
-                ${student.approval_status === "approved" ? "مفعل" : student.approval_status === "pending" ? "بانتظار التفعيل" : student.approval_status === "locked" ? "مرفوض نهائياً" : `مرفوض · ${student.rejection_count}/3`}
-              </span>
-            </td>
             <td>${escapeHTML(student.bookings_count ?? 0)}</td>
             <td>
               <span class="status status-active">
@@ -541,15 +514,9 @@
                 ${escapeHTML(student.unpaid_count ?? 0)}
               </span>
             </td>
-            <td>
-              ${student.approval_status === "pending" ? `
-                <button class="text-btn" type="button" data-student-approve="${escapeHTML(student.id)}">قبول</button>
-                <button class="text-btn" type="button" data-student-reject="${escapeHTML(student.id)}">رفض</button>
-              ` : "—"}
-            </td>
           </tr>
         `).join("") ||
-          '<tr><td colspan="8">لا يوجد تلاميذ مسجلون حالياً.</td></tr>';
+          '<tr><td colspan="6">لا يوجد تلاميذ مسجلون حالياً.</td></tr>';
       }
 
       const totalBookings = students.reduce(
@@ -577,7 +544,7 @@
 
       if (tbody) {
         tbody.innerHTML =
-          '<tr><td colspan="8">تعذر تحميل البيانات. تحقق من اتصال السيرفر.</td></tr>';
+          '<tr><td colspan="6">تعذر تحميل البيانات. تحقق من اتصال السيرفر.</td></tr>';
       }
 
       showToast("تعذر تحميل التلاميذ من السيرفر.");
