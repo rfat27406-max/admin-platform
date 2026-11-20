@@ -3,7 +3,7 @@
   const titles = {
     dashboard: "نظرة عامة",
     teachers: "الأساتذة",
-    "teacher-profile": "ملف الأستاذ بومدين",
+    "teacher-profile": "ملف الأستاذ",
     "teacher-space": "فضاء الأستاذ",
     groups: "الأفواج والحصص",
     students: "التلاميذ",
@@ -23,8 +23,9 @@
   let toastTimer;
   let selectedTeacherGroupId = null;
   const ADMIN_TOKEN_KEY = "madrasati_admin_token_v2";
-  let adminToken = sessionStorage.getItem(ADMIN_TOKEN_KEY) || "";
+  let adminToken = localStorage.getItem(ADMIN_TOKEN_KEY) || "";
   let teacherGroupsCache = [];
+  let teacherToken = "";
   let selectedTeacherId = "teacher-boumediene";
 
   function showToast(message) {
@@ -67,13 +68,37 @@
     return payload;
   }
 
-  function teacherApiPath(path) {
-    const separator = path.includes("?") ? "&" : "?";
-    return `${path}${separator}teacher_id=${encodeURIComponent(selectedTeacherId)}`;
-  }
+  function teacherApiPath(path) { return path; }
 
   async function teacherApiRequest(path, options = {}) {
-    return apiRequest(teacherApiPath(path), options);
+    if (!teacherToken) throw new Error("يجب إدخال كلمة مرور الأستاذ أولاً.");
+    const response = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${teacherToken}`,
+        ...(options.headers || {})
+      }
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload.error || `خطأ في الاتصال: ${response.status}`);
+    return payload;
+  }
+
+  async function ensureTeacherSession() {
+    const teacher = (await apiRequest("/api/teachers")).teachers?.find(t => t.id === selectedTeacherId);
+    if (!teacher) throw new Error("الأستاذ المحدد غير موجود.");
+    const password = prompt(`أدخل كلمة مرور ${teacher.name} لفتح فضائه:`);
+    if (!password) return false;
+    const response = await fetch(`${API_BASE}/api/teacher/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ teacher_id: selectedTeacherId, password })
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload.error || "تعذر تسجيل دخول الأستاذ.");
+    teacherToken = payload.access_token;
+    return true;
   }
 
   async function showAdminLogin() {
@@ -105,7 +130,7 @@
           const payload = await response.json().catch(() => ({}));
           if (!response.ok) throw new Error(payload.error || "تعذر تسجيل الدخول.");
           adminToken = payload.access_token;
-          sessionStorage.setItem(ADMIN_TOKEN_KEY, adminToken);
+          localStorage.setItem(ADMIN_TOKEN_KEY, adminToken);
           overlay.remove();
           resolve(true);
         } catch (error) {
@@ -124,7 +149,7 @@
         return true;
       } catch {
         adminToken = "";
-        sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+        localStorage.removeItem(ADMIN_TOKEN_KEY);
       }
     }
     return showAdminLogin();
@@ -244,6 +269,8 @@
       const choices = teachers.map(t => `${t.id} = ${t.name}`).join("\\n");
       const teacherId = prompt(`معرّف الأستاذ الذي سيملك الفوج:\\n${choices}`, teachers[0]?.id || "");
       if (!teacherId) return;
+      const teacherPassword = prompt("أدخل الكود/كلمة مرور الأستاذ لربط الفوج بفضائه:");
+      if (!teacherPassword) return;
       const name = prompt("اسم الفوج:");
       if (!name) return;
       const weekday = prompt("اليوم: friday أو saturday", "friday");
@@ -252,7 +279,7 @@
       const price_dzd = Number(prompt("سعر الحصة بالدينار:", "300"));
       await apiRequest("/api/admin/groups", {
         method: "POST",
-        body: JSON.stringify({ teacher_id: teacherId, name, weekday, start_time, end_time, price_dzd })
+        body: JSON.stringify({ teacher_id: teacherId, teacher_password: teacherPassword, name, weekday, start_time, end_time, price_dzd })
       });
       showToast("تمت إضافة الفوج بنجاح.");
       await loadGroupsFromServer();
@@ -326,6 +353,11 @@
         </tr>
       `).join("");
 
+      const groupPanelText = document.querySelector("#page-groups .panel-head p");
+      if (groupPanelText) groupPanelText.textContent = `عدد الأفواج النشطة: ${groups.length}`;
+      const groupPanelChip = document.querySelector("#page-groups .panel-head .muted-chip");
+      if (groupPanelChip) groupPanelChip.textContent = `${groups.length} أفواج`;
+      setText("adminGroupsCount", `${groups.length} أفواج`);
       const groupTbody = document.querySelector("#page-groups table tbody");
 
       if (groupTbody) {
@@ -341,7 +373,7 @@
             <td><b>${escapeHTML(groupName(group.name))}</b></td>
             <td>${escapeHTML(weekdayArabic(group.weekday))}</td>
             <td>${escapeHTML(group.start_time)} — ${escapeHTML(group.end_time)}</td>
-            <td>علوم طبيعية</td>
+            <td>${escapeHTML(group.subject || "—")}</td>
             <td>${escapeHTML(group.price_dzd)} دج</td>
             <td><span class="status status-active">نشط</span></td>
           </tr>
@@ -435,6 +467,7 @@
 
   document.getElementById("teacherSpaceSelect")?.addEventListener("change", event => {
     selectedTeacherId = event.target.value;
+    teacherToken = "";
     loadTeacherSpace();
   });
 
@@ -493,6 +526,7 @@
       const payload = await apiRequest("/api/admin/students");
       const students = Array.isArray(payload.students) ? payload.students : [];
 
+      setText("dashboardStudentsCount", students.length);
       const tbody = document.getElementById("studentsTableBody");
 
       if (tbody) {
@@ -540,6 +574,7 @@
     } catch (error) {
       console.error("تعذر تحميل التلاميذ:", error);
 
+      setText("dashboardStudentsCount", students.length);
       const tbody = document.getElementById("studentsTableBody");
 
       if (tbody) {
@@ -591,6 +626,18 @@
       button.disabled = false;
     }
   });
+
+  async function loadAdminSummary() {
+    const payload = await apiRequest("/api/admin/summary");
+    const summary = payload.summary || {};
+    setText("dashboardTeachersCount", summary.teachers_count ?? 0);
+    setText("dashboardGroupsCount", summary.groups_count ?? 0);
+    setText("dashboardRevenue", formatMoney(summary.total_revenue));
+    setText("adminPaidCount", summary.paid_count ?? 0);
+    setText("adminRevenue", formatMoney(summary.total_revenue));
+    setText("adminUnpaidCount", summary.unpaid_count ?? 0);
+    return summary;
+  }
 
   // ==========================================
   // فضاء الأستاذ: الملخص المالي
@@ -695,8 +742,8 @@
     );
 
     try {
-      const payload = await apiRequest(
-        teacherApiPath(`/api/teacher/groups/${encodeURIComponent(groupId)}/students`)
+      const payload = await teacherApiRequest(
+        `/api/teacher/groups/${encodeURIComponent(groupId)}/students`
       );
 
       const students = Array.isArray(payload.students) ? payload.students : [];
@@ -742,7 +789,7 @@
                 data-pay-booking="${escapeHTML(student.booking_id)}"
                 data-student-name="${escapeHTML(student.first_name)} ${escapeHTML(student.last_name)}"
               >
-                تأكيد استلام 300 دج
+                تأكيد استلام المبلغ
               </button>
             `;
 
@@ -755,7 +802,7 @@
             <td>${formatDate(student.session_date)}</td>
             <td>${escapeHTML(student.status || "registered")}</td>
             <td><span class="status ${paymentClass}">${paymentLabel}</span></td>
-            <td>${escapeHTML(student.price_dzd ?? 300)} دج</td>
+            <td>${escapeHTML(student.price_dzd ?? "—")} دج</td>
             <td>${buttonHTML}</td>
           </tr>
         `;
@@ -779,7 +826,7 @@
     if (!bookingId) return;
 
     const confirmed = window.confirm(
-      `هل تؤكد استلام مبلغ 300 دج من التلميذ ${studentName}؟`
+      `هل تؤكد استلام المبلغ من التلميذ ${studentName}؟`
     );
 
     if (!confirmed) return;
@@ -790,8 +837,8 @@
     }
 
     try {
-      const payload = await apiRequest(
-        teacherApiPath(`/api/teacher/bookings/${encodeURIComponent(bookingId)}/pay`),
+      const payload = await teacherApiRequest(
+        `/api/teacher/bookings/${encodeURIComponent(bookingId)}/pay`,
         { method: "POST" }
       );
 
@@ -814,7 +861,7 @@
 
       if (button) {
         button.disabled = false;
-        button.textContent = "تأكيد استلام 300 دج";
+        button.textContent = "تأكيد استلام المبلغ";
       }
     }
   }
@@ -863,6 +910,10 @@
     }
 
     try {
+      if (!teacherToken && !(await ensureTeacherSession())) {
+        if (grid) grid.innerHTML = "<p>أدخل كلمة مرور الأستاذ لعرض بياناته.</p>";
+        return;
+      }
       await Promise.all([
         loadTeacherSummary(),
         loadTeacherGroups()
@@ -885,7 +936,7 @@
       loadRegistrationRequests(),
       loadTeachersTable(),
       loadAdminNotifications(),
-      loadTeacherSummary().catch(error => console.error("تعذر تحميل الملخص المالي:", error))
+      loadAdminSummary()
     ]);
   })();
 

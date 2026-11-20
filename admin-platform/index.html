@@ -57,7 +57,7 @@
         </div>
 
         <div class="top-actions">
-          <span class="demo-pill"><i></i> بيانات تجريبية</span>
+          
           <button class="icon-btn" id="topNotification" aria-label="الإشعارات">♢<em></em></button>
           <div class="top-avatar">م</div>
         </div>
@@ -85,15 +85,15 @@
               <h2>ملخص المدرسة</h2>
               <p>إحصائيات المدرسة</p>
             </div>
-            <span class="muted-chip">بيانات مباشرة وتجريبية</span>
+            <span class="muted-chip">بيانات قاعدة البيانات</span>
           </div>
 
           <div class="stats-grid">
             <article class="stat-card">
               <div class="stat-top"><span class="stat-icon purple">♙</span><span class="stat-note">الأساتذة</span></div>
               <p class="stat-label">الأساتذة</p>
-              <strong>01</strong>
-              <small>الأستاذ بومدين</small>
+              <strong id="dashboardTeachersCount">—</strong>
+              <small>الأساتذة النشطون</small>
             </article>
 
             <article class="stat-card">
@@ -106,8 +106,8 @@
             <article class="stat-card">
               <div class="stat-top"><span class="stat-icon mint">▤</span><span class="stat-note">مباشر</span></div>
               <p class="stat-label">الأفواج</p>
-              <strong>05</strong>
-              <small>أفواج الأستاذ بومدين</small>
+              <strong id="dashboardGroupsCount">—</strong>
+              <small>الأفواج النشطة</small>
             </article>
 
             <article class="stat-card">
@@ -121,30 +121,16 @@
           <div class="dashboard-grid">
             <article class="panel schedule-panel">
               <div class="panel-head">
-                <div><h3>برنامج الأفواج</h3><p>الجدول الحالي للأستاذ بومدين</p></div>
+                <div><h3>برنامج الأفواج</h3><p>الجدول المسجل في قاعدة البيانات</p></div>
                 <button class="text-btn" data-goto="groups">عرض كل الأفواج ←</button>
               </div>
-              <div class="schedule-list">
-                <div class="schedule-row"><span class="day-badge">الجمعة</span><div class="schedule-info"><b>الفوج الأول</b><small>08:00 — 10:00</small></div><span class="subject">علوم طبيعية</span></div>
-                <div class="schedule-row"><span class="day-badge">الجمعة</span><div class="schedule-info"><b>الفوج الثاني</b><small>10:00 — 12:00</small></div><span class="subject">علوم طبيعية</span></div>
-                <div class="schedule-row"><span class="day-badge">الجمعة</span><div class="schedule-info"><b>الفوج الثالث</b><small>14:00 — 16:00</small></div><span class="subject">علوم طبيعية</span></div>
-                <div class="schedule-row"><span class="day-badge">السبت</span><div class="schedule-info"><b>الفوج الرابع</b><small>08:00 — 10:00</small></div><span class="subject">علوم طبيعية</span></div>
-                <div class="schedule-row"><span class="day-badge">السبت</span><div class="schedule-info"><b>الفوج الخامس</b><small>10:00 — 12:00</small></div><span class="subject">علوم طبيعية</span></div>
-              </div>
+              <div class="schedule-list"><p class="empty-hint">جارٍ تحميل برنامج الأفواج من قاعدة البيانات...</p></div>
             </article>
 
             <article class="panel teacher-panel">
-              <div class="panel-head"><div><h3>الأستاذ الحالي</h3><p>ملف الأستاذ</p></div><span class="status-dot">نشط</span></div>
-              <div class="teacher-profile">
-                <div class="teacher-avatar">ب</div>
-                <div><h3>الأستاذ بومدين</h3><p>علوم الطبيعة والحياة</p><span class="level-tag">الطور الثانوي</span></div>
-              </div>
-              <div class="teacher-meta">
-                <div><span>عدد الأفواج</span><b>05 أفواج</b></div>
-                <div><span>أيام التدريس</span><b>الجمعة والسبت</b></div>
-                <div><span>سعر الحصة</span><b>300 دج</b></div>
-              </div>
-              <button class="outline-btn full" data-goto="teacher-profile">فتح ملف الأستاذ</button>
+              <div class="panel-head"><div><h3>الأساتذة</h3><p>البيانات الفعلية المسجلة</p></div></div>
+              <div class="teacher-profile"><div class="teacher-avatar">م</div><div><h3>بيانات الأساتذة</h3><p>تظهر من قاعدة البيانات بعد التحميل</p></div></div>
+              <button class="outline-btn full" data-goto="teachers">عرض الأساتذة</button>
             </article>
           </div>
         </section>
@@ -162,14 +148,7 @@
                 <thead>
                   <tr><th>الأستاذ</th><th>المادة</th><th>المستوى</th><th>الأفواج</th><th>الحالة</th><th>الإجراءات</th></tr>
                 </thead>
-                <tbody id="teachersTableBody">
-                  <tr>
-                    <td><div class="person-cell"><span class="table-avatar">ب</span><b>الأستاذ بومدين</b></div></td>
-                    <td>علوم الطبيعة والحياة</td><td>الثانوي</td><td>05</td>
-                    <td><span class="status status-active">نشط</span></td>
-                    <td><button class="text-btn" data-goto="teacher-profile">عرض الملف ←</button></td>
-                  </tr>
-                </tbody>
+                <tbody id="teachersTableBody"><tr><td colspan="6">جارٍ تحميل البيانات...</td></tr></tbody>
               </table>
             </div>
           </article>
@@ -179,14 +158,12 @@
         <section class="page" id="page-teacher-space">
           <div class="section-heading">
             <div>
-              <h2 id="teacherSpaceHeading">فضاء الأستاذ بومدين</h2>
+              <h2 id="teacherSpaceHeading">فضاء الأستاذ</h2>
               <p>اختر الأستاذ لعرض أفواجه وتلاميذه ومدفوعاته بشكل مستقل</p>
             </div>
             <label class="teacher-space-picker" style="display:flex;gap:8px;align-items:center">
               <span>الأستاذ:</span>
-              <select id="teacherSpaceSelect" style="padding:10px 12px;border:1px solid #dbe3ef;border-radius:10px;min-width:220px;font:inherit">
-                <option value="teacher-boumediene">الأستاذ بومدين</option>
-              </select>
+              <select id="teacherSpaceSelect" style="padding:10px 12px;border:1px solid #dbe3ef;border-radius:10px;min-width:220px;font:inherit"><option value="">اختر الأستاذ</option></select>
             </label>
           </div>
 
@@ -283,19 +260,13 @@
 
           <article class="panel">
             <div class="panel-head">
-              <div><h3>الأفواج الحالية</h3><p>السعر 300 دج للحصة · سعة التسجيل غير محدودة</p></div>
-              <span class="muted-chip">05 أفواج</span>
+              <div><h3>الأفواج الحالية</h3><p>البيانات المعروضة من قاعدة البيانات</p></div>
+              <span class="muted-chip" id="adminGroupsCount">—</span>
             </div>
             <div class="table-wrap">
               <table>
                 <thead><tr><th>الفوج</th><th>اليوم</th><th>التوقيت</th><th>الأستاذ</th><th>السعر</th><th>المادة</th></tr></thead>
-                <tbody>
-                  <tr><td><b>الفوج الأول</b></td><td>الجمعة</td><td>08:00 — 10:00</td><td>بومدين</td><td>300 دج</td><td>علوم طبيعية</td></tr>
-                  <tr><td><b>الفوج الثاني</b></td><td>الجمعة</td><td>10:00 — 12:00</td><td>بومدين</td><td>300 دج</td><td>علوم طبيعية</td></tr>
-                  <tr><td><b>الفوج الثالث</b></td><td>الجمعة</td><td>14:00 — 16:00</td><td>بومدين</td><td>300 دج</td><td>علوم طبيعية</td></tr>
-                  <tr><td><b>الفوج الرابع</b></td><td>السبت</td><td>08:00 — 10:00</td><td>بومدين</td><td>300 دج</td><td>علوم طبيعية</td></tr>
-                  <tr><td><b>الفوج الخامس</b></td><td>السبت</td><td>10:00 — 12:00</td><td>بومدين</td><td>300 دج</td><td>علوم طبيعية</td></tr>
-                </tbody>
+                <tbody><tr><td colspan="6">جارٍ تحميل البيانات...</td></tr></tbody>
               </table>
             </div>
           </article>
@@ -304,23 +275,23 @@
         <!-- ملف الأستاذ -->
         <section class="page" id="page-teacher-profile">
           <div class="section-heading">
-            <div><h2>ملف الأستاذ بومدين</h2><p>المعلومات الأساسية والبرنامج الأسبوعي</p></div>
+            <div><h2>ملف الأستاذ</h2><p>اختر الأستاذ من فضائه لعرض بياناته الحقيقية</p></div>
             <button class="outline-btn" data-goto="teachers">← العودة إلى الأساتذة</button>
           </div>
 
           <article class="panel profile-hero">
             <div class="profile-hero-main">
-              <div class="teacher-avatar large">ب</div>
-              <div><span class="status status-active">أستاذ نشط</span><h2>الأستاذ بومدين</h2><p>علوم الطبيعة والحياة · الطور الثانوي</p></div>
+              <div class="teacher-avatar large">أ</div>
+              <div><span class="status">بيانات مباشرة</span><h2>بيانات الأستاذ</h2><p>لا توجد بيانات ثابتة في هذه الصفحة</p></div>
             </div>
-            <div class="profile-price"><small>سعر الحصة</small><b>300 دج</b></div>
+            <div class="profile-price"><small>سعر الحصة</small><b>حسب الفوج</b></div>
           </article>
 
           <div class="stats-grid profile-stats">
-            <article class="stat-card"><p class="stat-label">عدد الأفواج</p><strong>05</strong><small>كلها تابعة للأستاذ بومدين</small></article>
-            <article class="stat-card"><p class="stat-label">أيام التدريس</p><strong>02</strong><small>الجمعة والسبت</small></article>
-            <article class="stat-card"><p class="stat-label">مدة الحصة</p><strong>02 <small>ساعة</small></strong><small>لكل فوج</small></article>
-            <article class="stat-card"><p class="stat-label">سعر الحصة</p><strong>300 <small>دج</small></strong><small>السعر الحالي</small></article>
+            <article class="stat-card"><p class="stat-label">عدد الأفواج</p><strong>—</strong><small>بيانات مباشرة عند فتح فضاء الأستاذ</small></article>
+            <article class="stat-card"><p class="stat-label">أيام التدريس</p><strong>—</strong><small>بيانات مباشرة</small></article>
+            <article class="stat-card"><p class="stat-label">مدة الحصة</p><strong>—</strong><small>بيانات مباشرة</small></article>
+            <article class="stat-card"><p class="stat-label">سعر الحصة</p><strong>—</strong><small>حسب الفوج</small></article>
           </div>
 
           <article class="panel profile-groups">
@@ -328,13 +299,7 @@
             <div class="table-wrap">
               <table>
                 <thead><tr><th>اسم الفوج</th><th>اليوم</th><th>التوقيت</th><th>المادة</th><th>السعر</th><th>الحالة</th></tr></thead>
-                <tbody>
-                  <tr><td><b>الفوج الأول</b></td><td>الجمعة</td><td>08:00 — 10:00</td><td>علوم طبيعية</td><td>300 دج</td><td><span class="status status-active">نشط</span></td></tr>
-                  <tr><td><b>الفوج الثاني</b></td><td>الجمعة</td><td>10:00 — 12:00</td><td>علوم طبيعية</td><td>300 دج</td><td><span class="status status-active">نشط</span></td></tr>
-                  <tr><td><b>الفوج الثالث</b></td><td>الجمعة</td><td>14:00 — 16:00</td><td>علوم طبيعية</td><td>300 دج</td><td><span class="status status-active">نشط</span></td></tr>
-                  <tr><td><b>الفوج الرابع</b></td><td>السبت</td><td>08:00 — 10:00</td><td>علوم طبيعية</td><td>300 دج</td><td><span class="status status-active">نشط</span></td></tr>
-                  <tr><td><b>الفوج الخامس</b></td><td>السبت</td><td>10:00 — 12:00</td><td>علوم طبيعية</td><td>300 دج</td><td><span class="status status-active">نشط</span></td></tr>
-                </tbody>
+                <tbody><tr><td colspan="6">اختر الأستاذ من فضائه لعرض أفواجه.</td></tr></tbody>
               </table>
             </div>
           </article>
