@@ -19,6 +19,8 @@ const day = d => d === "friday" ? "الجمعة" : "السبت";
 const safe = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 $("loginForm").addEventListener("submit", async e=>{
   e.preventDefault(); $("loginError").textContent="";
+  const submit=$("loginForm").querySelector('button[type="submit"]');
+  if(submit) submit.disabled=true;
   try {
     const data=await api("/api/teacher/login",{method:"POST",body:JSON.stringify({
       teacher_id:$("teacherId").value.trim(),password:$("teacherPassword").value
@@ -27,11 +29,19 @@ $("loginForm").addEventListener("submit", async e=>{
     sessionStorage.setItem("madrasati_teacher_token",token);
     await showApp();
   } catch(err){$("loginError").textContent=err.message;}
+  finally { if(submit) submit.disabled=false; }
 });
 async function showApp(){
   $("loginView").classList.add("hidden");$("appView").classList.remove("hidden");
   $("teacherName").textContent=teacher?.name || "فضاء الأستاذ";
-  await Promise.all([loadSummary(),loadGroups(),loadPayments()]);
+  try { await Promise.all([loadSummary(),loadGroups(),loadPayments()]); }
+  catch (error) {
+    $("appView").classList.add("hidden");
+    $("loginView").classList.remove("hidden");
+    $("loginError").textContent=error.message;
+    sessionStorage.removeItem("madrasati_teacher_token");
+    token="";
+  }
 }
 async function loadSummary(){
   const {summary={}}=await api("/api/teacher/summary");
@@ -42,7 +52,7 @@ async function loadSummary(){
 }
 async function loadGroups(){
   const {groups=[]}=await api("/api/teacher/groups");
-  $("groups").innerHTML=groups.map(g=>`<article class="stat"><b>${safe(g.name)}</b><p>${day(g.weekday)} · ${safe(g.start_time)}–${safe(g.end_time)}</p><p>${money(g.price_dzd)} للحصة · ${g.bookings_count} حجز</p><button class="btn light" data-group="${g.id}">عرض التلاميذ</button></article>`).join("") || "<p>لا توجد أفواج بعد.</p>";
+  $("groups").innerHTML=groups.map(g=>`<article class="stat"><b>${safe(g.name)} ${Number(g.active)===1?"":"· متوقف"}</b><p>${day(g.weekday)} · ${safe(g.start_time)}–${safe(g.end_time)}</p><p>${money(g.price_dzd)} للحصة · ${g.bookings_count} حجز</p><button class="btn light" data-group="${g.id}">عرض التلاميذ</button></article>`).join("") || "<p>لا توجد أفواج بعد.</p>";
 }
 async function loadPayments(){
   const {payments=[]}=await api("/api/teacher/payments");
@@ -83,5 +93,12 @@ $("addGroup").addEventListener("click",async()=>{
   try{await api("/api/teacher/groups",{method:"POST",body:JSON.stringify({name,weekday,start_time,end_time,price_dzd})});await loadGroups();}
   catch(err){alert(err.message);}
 });
-$("logout").addEventListener("click",()=>{sessionStorage.removeItem("madrasati_teacher_token");token="";location.reload();});
-if(token){sessionStorage.removeItem("madrasati_teacher_token");token="";}
+$("logout").addEventListener("click",async()=>{
+  try { if(token) await api("/api/teacher/logout",{method:"POST"}); } catch(error) { console.warn(error); }
+  sessionStorage.removeItem("madrasati_teacher_token");token="";location.reload();
+});
+if(token){
+  api("/api/teacher/me").then(data=>{teacher=data.teacher;return showApp();}).catch(()=>{
+    sessionStorage.removeItem("madrasati_teacher_token");token="";
+  });
+}
