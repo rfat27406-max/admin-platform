@@ -15,12 +15,10 @@ async function api(path, options={}) {
   return data;
 }
 const money = n => `${Number(n||0).toLocaleString("ar-DZ")} دج`;
-const day = d => d === "friday" ? "الجمعة" : "السبت";
+const days={sunday:"الأحد",monday:"الاثنين",tuesday:"الثلاثاء",wednesday:"الأربعاء",thursday:"الخميس",friday:"الجمعة",saturday:"السبت"}; const day = d => days[d] || d;
 const safe = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 $("loginForm").addEventListener("submit", async e=>{
   e.preventDefault(); $("loginError").textContent="";
-  const submit=$("loginForm").querySelector('button[type="submit"]');
-  if(submit) submit.disabled=true;
   try {
     const data=await api("/api/teacher/login",{method:"POST",body:JSON.stringify({
       teacher_id:$("teacherId").value.trim(),password:$("teacherPassword").value
@@ -29,19 +27,11 @@ $("loginForm").addEventListener("submit", async e=>{
     sessionStorage.setItem("madrasati_teacher_token",token);
     await showApp();
   } catch(err){$("loginError").textContent=err.message;}
-  finally { if(submit) submit.disabled=false; }
 });
 async function showApp(){
   $("loginView").classList.add("hidden");$("appView").classList.remove("hidden");
   $("teacherName").textContent=teacher?.name || "فضاء الأستاذ";
-  try { await Promise.all([loadSummary(),loadGroups(),loadPayments()]); }
-  catch (error) {
-    $("appView").classList.add("hidden");
-    $("loginView").classList.remove("hidden");
-    $("loginError").textContent=error.message;
-    sessionStorage.removeItem("madrasati_teacher_token");
-    token="";
-  }
+  await Promise.all([loadSummary(),loadGroups(),loadPayments()]);
 }
 async function loadSummary(){
   const {summary={}}=await api("/api/teacher/summary");
@@ -52,7 +42,7 @@ async function loadSummary(){
 }
 async function loadGroups(){
   const {groups=[]}=await api("/api/teacher/groups");
-  $("groups").innerHTML=groups.map(g=>`<article class="stat"><b>${safe(g.name)} ${Number(g.active)===1?"":"· متوقف"}</b><p>${day(g.weekday)} · ${safe(g.start_time)}–${safe(g.end_time)}</p><p>${money(g.price_dzd)} للحصة · ${g.bookings_count} حجز</p><button class="btn light" data-group="${g.id}">عرض التلاميذ</button></article>`).join("") || "<p>لا توجد أفواج بعد.</p>";
+  $("groups").innerHTML=groups.map(g=>`<article class="stat"><b>${safe(g.name)}</b><p>${day(g.weekday)} · ${safe(g.start_time)}–${safe(g.end_time)}</p><p>${money(g.price_dzd)} للحصة · ${g.bookings_count} حجز</p><button class="btn light" data-group="${g.id}">عرض التلاميذ</button> <button class="btn" data-clear-group="${g.id}">تنظيف تسجيلات الحصة</button></article>`).join("") || "<p>لا توجد أفواج بعد.</p>";
 }
 async function loadPayments(){
   const {payments=[]}=await api("/api/teacher/payments");
@@ -65,7 +55,16 @@ async function loadPayments(){
     <td>${money(p.price_dzd)}</td>
   </tr>`).join("") || "<tr><td colspan='6'>لا توجد مدفوعات بعد.</td></tr>";
 }
-$("groups").addEventListener("click",e=>{
+$("groups").addEventListener("click",async e=>{
+  const clear=e.target.closest("[data-clear-group]");
+  if(clear){
+    const id=Number(clear.dataset.clearGroup);
+    if(!confirm("سيتم أرشفة تسجيلات آخر حصة منتهية لهذا الفوج. لن تتغير المدفوعات أو سجلها. هل تريد المتابعة؟"))return;
+    clear.disabled=true;
+    try{const result=await api(`/api/teacher/groups/${id}/clear-current`,{method:"POST"});alert(`${result.message} (${result.archived_count} تسجيل)`);await Promise.all([loadGroups(),loadSummary(),loadPayments()]);if(selectedGroup===id)await loadStudents(id);}
+    catch(err){alert(err.message);clear.disabled=false;}
+    return;
+  }
   const b=e.target.closest("[data-group]");if(b)loadStudents(Number(b.dataset.group));
 });
 async function loadStudents(id){
@@ -86,19 +85,12 @@ $("studentRows").addEventListener("click",async e=>{
 $("refreshGroup").addEventListener("click",()=>selectedGroup&&loadStudents(selectedGroup));
 $("addGroup").addEventListener("click",async()=>{
   const name=prompt("اسم الفوج:");if(!name)return;
-  const weekday=prompt("اليوم: friday أو saturday","friday");
+  const weekday=prompt("اليوم: الأحد، الاثنين، الثلاثاء، الأربعاء، الخميس، الجمعة، السبت","friday");
   const start_time=prompt("وقت البداية HH:MM","08:00");
   const end_time=prompt("وقت النهاية HH:MM","10:00");
   const price_dzd=Number(prompt("سعر الحصة بالدينار","300"));
   try{await api("/api/teacher/groups",{method:"POST",body:JSON.stringify({name,weekday,start_time,end_time,price_dzd})});await loadGroups();}
   catch(err){alert(err.message);}
 });
-$("logout").addEventListener("click",async()=>{
-  try { if(token) await api("/api/teacher/logout",{method:"POST"}); } catch(error) { console.warn(error); }
-  sessionStorage.removeItem("madrasati_teacher_token");token="";location.reload();
-});
-if(token){
-  api("/api/teacher/me").then(data=>{teacher=data.teacher;return showApp();}).catch(()=>{
-    sessionStorage.removeItem("madrasati_teacher_token");token="";
-  });
-}
+$("logout").addEventListener("click",()=>{sessionStorage.removeItem("madrasati_teacher_token");token="";location.reload();});
+if(token){sessionStorage.removeItem("madrasati_teacher_token");token="";}

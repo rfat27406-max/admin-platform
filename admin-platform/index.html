@@ -59,7 +59,6 @@
         <div class="top-actions">
           
           <button class="icon-btn" id="topNotification" aria-label="الإشعارات">♢<em></em></button>
-          <button class="outline-btn admin-logout" id="adminLogout" type="button">تسجيل الخروج</button>
           <div class="top-avatar">م</div>
         </div>
       </header>
@@ -266,7 +265,7 @@
             </div>
             <div class="table-wrap">
               <table>
-                <thead><tr><th>الفوج</th><th>اليوم</th><th>التوقيت</th><th>الأستاذ</th><th>السعر</th><th>المادة</th><th>التحكم</th></tr></thead>
+                <thead><tr><th>الفوج</th><th>اليوم</th><th>التوقيت</th><th>الأستاذ</th><th>السعر</th><th>المادة</th></tr></thead>
                 <tbody><tr><td colspan="6">جارٍ تحميل البيانات...</td></tr></tbody>
               </table>
             </div>
@@ -352,7 +351,6 @@
           <article class="panel">
             <div class="panel-head">
               <div><h3>قائمة التلاميذ</h3><p>بيانات التلاميذ المسجلين في المنصة</p></div>
-              <input id="studentSearch" type="search" placeholder="ابحث باسم التلميذ..." aria-label="ابحث باسم التلميذ" class="admin-search">
             </div>
             <div class="table-wrap">
               <table>
@@ -378,17 +376,10 @@
             <article class="stat-card"><p class="stat-label">المداخيل</p><strong id="adminRevenue">— دج</strong><small>من الدفعات المؤكدة</small></article>
             <article class="stat-card"><p class="stat-label">بانتظار التأكيد</p><strong id="adminUnpaidCount">—</strong><small>الحجوزات غير المدفوعة</small></article>
           </div>
-          <article class="panel">
-            <div class="panel-head">
-              <div><h3>سجل المدفوعات والحجوزات</h3><p>عرض تفصيلي لجميع التسجيلات وحالات الدفع.</p></div>
-              <button class="outline-btn" type="button" id="refreshAdminPayments">تحديث البيانات</button>
-            </div>
-            <div class="table-wrap">
-              <table>
-                <thead><tr><th>التلميذ</th><th>الفوج</th><th>الأستاذ</th><th>تاريخ الحصة</th><th>السعر</th><th>الدفع</th><th>الحالة</th></tr></thead>
-                <tbody id="adminPaymentsBody"><tr><td colspan="7">جارٍ تحميل سجل المدفوعات...</td></tr></tbody>
-              </table>
-            </div>
+          <article class="panel empty-state">
+            <div class="empty-icon">◈</div>
+            <h3>ملخص المدفوعات</h3>
+            <p>تُحدّث الأرقام تلقائياً بعد تأكيد الأستاذ للدفع من فضائه.</p>
           </article>
         </section>
 

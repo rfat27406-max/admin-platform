@@ -8,22 +8,3 @@
 @media(max-width:700px){.profile-hero{align-items:flex-start;gap:14px;padding:17px}.profile-hero-main{gap:10px}.teacher-avatar.large{width:54px;height:54px}.profile-price{padding-right:13px}.profile-price b{font-size:16px}}
 
 .registration-requests-panel{margin-bottom:22px}.registration-actions{display:flex;gap:8px;flex-wrap:wrap}.registration-actions button{padding:8px 13px;font:inherit;cursor:pointer}.registration-actions button:disabled{opacity:.55;cursor:wait}
-
-/* تحسينات الإدارة والتحكم */
-.admin-logout{white-space:nowrap;font-size:12px}
-.admin-search{max-width:260px;width:100%;padding:10px 12px;border:1px solid var(--line,#dbe3ef);border-radius:10px;background:#fff;color:inherit;font:inherit}
-#page-groups table td:last-child{min-width:190px;white-space:nowrap}
-#page-groups table td:last-child .text-btn{margin-inline-start:6px}
-#page-teachers table td:last-child{min-width:220px}
-#page-teachers table td:last-child .text-btn{margin-inline-start:5px}
-button:disabled{opacity:.6;cursor:not-allowed}
-@media(max-width:760px){
-  .admin-logout{font-size:10px;padding:8px}
-  .admin-search{max-width:100%;margin-top:10px}
-  #page-groups table td:last-child,#page-teachers table td:last-child{white-space:normal}
-}
-
-:focus-visible{outline:3px solid #9aaeff;outline-offset:2px}
-#page-groups table tr:hover,#page-teachers table tr:hover,#page-payments table tr:hover{background:#f8faff}
-#page-payments .panel{overflow:hidden}
-#adminPaymentsBody td{white-space:nowrap}

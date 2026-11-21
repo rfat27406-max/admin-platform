@@ -25,9 +25,6 @@
   const ADMIN_TOKEN_KEY = "madrasati_admin_token_v2";
   let adminToken = localStorage.getItem(ADMIN_TOKEN_KEY) || "";
   let teacherGroupsCache = [];
-  let adminGroupsCache = [];
-  let adminTeachersCache = [];
-  let adminPaymentsCache = [];
   let teacherToken = "";
   let selectedTeacherId = "teacher-boumediene";
 
@@ -240,24 +237,8 @@
     sidebar?.classList.toggle("open");
   });
 
-  document.getElementById("refreshAdminPayments")?.addEventListener("click", loadAdminPayments);
-  document.getElementById("studentSearch")?.addEventListener("input", event => {
-    const query = event.target.value.trim().toLocaleLowerCase("ar");
-    document.querySelectorAll("#studentsTableBody tr").forEach(row => {
-      row.hidden = query && !row.textContent.toLocaleLowerCase("ar").includes(query);
-    });
-  });
-
   document.getElementById("topNotification")?.addEventListener("click", () => {
     navigate("notifications");
-  });
-
-  document.getElementById("adminLogout")?.addEventListener("click", async () => {
-    try { if (adminToken) await apiRequest("/api/admin/logout", { method: "POST" }); } catch (error) { console.warn(error); }
-    adminToken = "";
-    teacherToken = "";
-    localStorage.removeItem(ADMIN_TOKEN_KEY);
-    location.reload();
   });
 
   document.getElementById("addTeacher")?.addEventListener("click", async () => {
@@ -292,12 +273,10 @@
       if (!teacherPassword) return;
       const name = prompt("اسم الفوج:");
       if (!name) return;
-      const weekday = prompt("اليوم: friday أو saturday", "friday");
+      const weekday = prompt("اليوم: الأحد، الاثنين، الثلاثاء، الأربعاء، الخميس، الجمعة، السبت", "friday");
       const start_time = prompt("وقت البداية بصيغة HH:MM", "08:00");
       const end_time = prompt("وقت النهاية بصيغة HH:MM", "10:00");
-      const priceInput = prompt("سعر الحصة بالدينار:", "300");
-      if (priceInput === null) return;
-      const price_dzd = Number(priceInput);
+      const price_dzd = Number(prompt("سعر الحصة بالدينار:", "300"));
       await apiRequest("/api/admin/groups", {
         method: "POST",
         body: JSON.stringify({ teacher_id: teacherId, teacher_password: teacherPassword, name, weekday, start_time, end_time, price_dzd })
@@ -324,8 +303,8 @@
   }
 
   function weekdayArabic(value) {
-    if (value === "friday") return "الجمعة";
-    if (value === "saturday") return "السبت";
+    const days = {sunday:"الأحد",monday:"الاثنين",tuesday:"الثلاثاء",wednesday:"الأربعاء",thursday:"الخميس",friday:"الجمعة",saturday:"السبت"};
+    if (days[value]) return days[value];
     return value || "—";
   }
 
@@ -360,10 +339,8 @@
 
   async function loadGroupsFromServer() {
     try {
-      const payload = await apiRequest("/api/admin/groups");
+      const payload = await apiRequest("/api/groups");
       const groups = Array.isArray(payload.groups) ? payload.groups : [];
-      adminGroupsCache = groups;
-      const activeGroups = groups.filter(group => Number(group.active) === 1 && Number(group.teacher_active ?? 1) === 1);
 
       const groupRows = groups.map(group => `
         <tr>
@@ -373,30 +350,25 @@
           <td>${escapeHTML(group.teacher_name || "—")}</td>
           <td>${escapeHTML(group.price_dzd)} دج</td>
           <td>${escapeHTML(group.subject || "—")}</td>
-          <td>
-            <span class="status ${Number(group.active) === 1 && Number(group.teacher_active ?? 1) === 1 ? "status-active" : "status-pending"}">${Number(group.active) === 1 && Number(group.teacher_active ?? 1) === 1 ? "نشط" : "متوقف"}</span>
-            <button class="text-btn" type="button" data-edit-group="${escapeHTML(group.id)}">تعديل</button>
-            <button class="text-btn" type="button" data-toggle-group="${escapeHTML(group.id)}" data-active="${Number(group.active) === 1 ? "1" : "0"}">${Number(group.active) === 1 ? "إيقاف" : "إعادة تفعيل"}</button>
-          </td>
         </tr>
       `).join("");
 
       const groupPanelText = document.querySelector("#page-groups .panel-head p");
-      if (groupPanelText) groupPanelText.textContent = `عدد الأفواج النشطة: ${activeGroups.length} · الإجمالي: ${groups.length}`;
+      if (groupPanelText) groupPanelText.textContent = `عدد الأفواج النشطة: ${groups.length}`;
       const groupPanelChip = document.querySelector("#page-groups .panel-head .muted-chip");
-      if (groupPanelChip) groupPanelChip.textContent = `${activeGroups.length} نشط`;
-      setText("adminGroupsCount", `${activeGroups.length} نشط · ${groups.length} إجمالي`);
+      if (groupPanelChip) groupPanelChip.textContent = `${groups.length} أفواج`;
+      setText("adminGroupsCount", `${groups.length} أفواج`);
       const groupTbody = document.querySelector("#page-groups table tbody");
 
       if (groupTbody) {
         groupTbody.innerHTML = groupRows ||
-          '<tr><td colspan="7">لا توجد أفواج مسجلة حالياً.</td></tr>';
+          '<tr><td colspan="6">لا توجد أفواج نشطة حالياً.</td></tr>';
       }
 
       const profileTbody = document.querySelector("#page-teacher-profile table tbody");
 
       if (profileTbody) {
-        profileTbody.innerHTML = activeGroups.map(group => `
+        profileTbody.innerHTML = groups.map(group => `
           <tr>
             <td><b>${escapeHTML(groupName(group.name))}</b></td>
             <td>${escapeHTML(weekdayArabic(group.weekday))}</td>
@@ -412,7 +384,7 @@
       const scheduleList = document.querySelector("#page-dashboard .schedule-list");
 
       if (scheduleList) {
-        scheduleList.innerHTML = activeGroups.map(group => `
+        scheduleList.innerHTML = groups.map(group => `
           <div class="schedule-row">
             <span class="day-badge">${escapeHTML(weekdayArabic(group.weekday))}</span>
             <div class="schedule-info">
@@ -430,7 +402,7 @@
       );
 
       if (groupCount) {
-        groupCount.textContent = String(activeGroups.length).padStart(2, "0");
+        groupCount.textContent = String(groups.length).padStart(2, "0");
       }
 
       const dashboardGroupStat = [
@@ -441,7 +413,7 @@
 
       if (dashboardGroupStat) {
         const value = dashboardGroupStat.querySelector("strong");
-        if (value) value.textContent = String(activeGroups.length).padStart(2, "0");
+        if (value) value.textContent = String(groups.length).padStart(2, "0");
       }
 
     } catch (error) {
@@ -452,8 +424,7 @@
 
   async function loadTeachersTable() {
     try {
-      const { teachers = [] } = await apiRequest("/api/admin/teachers");
-      adminTeachersCache = teachers;
+      const { teachers = [] } = await apiRequest("/api/teachers");
       const tbody = document.getElementById("teachersTableBody");
       if (!tbody) return;
       tbody.innerHTML = teachers.map(teacher => `
@@ -461,27 +432,24 @@
           <td><div class="person-cell"><span class="table-avatar">${escapeHTML((teacher.name || "أ").slice(0,1))}</span><b>${escapeHTML(teacher.name)}</b></div></td>
           <td>${escapeHTML(teacher.subject)}</td><td>${escapeHTML(teacher.education_level)}</td>
           <td>${escapeHTML(teacher.groups_count ?? 0)}</td>
-          <td><span class="status ${Number(teacher.active) === 1 ? "status-active" : "status-pending"}">${Number(teacher.active) === 1 ? "نشط" : "متوقف"}</span></td>
+          <td><span class="status status-active">نشط</span></td>
           <td>
-            ${Number(teacher.active) === 1 ? `<button class="text-btn" type="button" data-open-teacher-space="${escapeHTML(teacher.id)}">فتح الفضاء</button>` : ""}
-            <button class="text-btn" type="button" data-edit-teacher="${escapeHTML(teacher.id)}">تعديل</button>
+            <button class="text-btn" type="button" data-open-teacher-space="${escapeHTML(teacher.id)}">فتح الفضاء</button>
             <button class="text-btn" type="button" data-set-teacher-password="${escapeHTML(teacher.id)}">كلمة المرور</button>
-            <button class="text-btn" type="button" data-toggle-teacher="${escapeHTML(teacher.id)}" data-active="${Number(teacher.active) === 1 ? "1" : "0"}">${Number(teacher.active) === 1 ? "إيقاف" : "تفعيل"}</button>
           </td>
         </tr>
       `).join("") || '<tr><td colspan="6">لا يوجد أساتذة بعد.</td></tr>';
 
       const selector = document.getElementById("teacherSpaceSelect");
       if (selector) {
-        const activeTeachers = teachers.filter(teacher => Number(teacher.active) === 1);
         const previous = selectedTeacherId;
-        selector.innerHTML = activeTeachers.map(teacher =>
+        selector.innerHTML = teachers.map(teacher =>
           `<option value="${escapeHTML(teacher.id)}">${escapeHTML(teacher.name)} · ${escapeHTML(teacher.subject)}</option>`
         ).join("");
-        if (activeTeachers.some(teacher => teacher.id === previous)) {
+        if (teachers.some(teacher => teacher.id === previous)) {
           selector.value = previous;
-        } else if (activeTeachers.length) {
-          selectedTeacherId = activeTeachers[0].id;
+        } else if (teachers.length) {
+          selectedTeacherId = teachers[0].id;
           selector.value = selectedTeacherId;
         }
       }
@@ -513,72 +481,6 @@
         method: "POST", body: JSON.stringify({ password })
       });
       showToast("تم تحديث كلمة المرور.");
-    } catch (error) { showToast(error.message); }
-  });
-
-  document.getElementById("teachersTableBody")?.addEventListener("click", async event => {
-    const edit = event.target.closest("[data-edit-teacher]");
-    const toggle = event.target.closest("[data-toggle-teacher]");
-    try {
-      if (edit) {
-        const teacher = adminTeachersCache.find(item => item.id === edit.dataset.editTeacher);
-        if (!teacher) return;
-        const name = prompt("اسم الأستاذ:", teacher.name);
-        if (name === null) return;
-        const subject = prompt("المادة:", teacher.subject);
-        if (subject === null) return;
-        const education_level = prompt("المستوى الدراسي:", teacher.education_level);
-        if (education_level === null) return;
-        await apiRequest(`/api/admin/teachers/${encodeURIComponent(teacher.id)}/update`, {
-          method: "POST", body: JSON.stringify({ name, subject, education_level })
-        });
-        showToast("تم تحديث بيانات الأستاذ.");
-      } else if (toggle) {
-        const active = toggle.dataset.active === "1" ? 0 : 1;
-        const label = active ? "إعادة تفعيل" : "إيقاف";
-        if (!confirm(`هل تريد ${label} حساب الأستاذ؟`)) return;
-        await apiRequest(`/api/admin/teachers/${encodeURIComponent(toggle.dataset.toggleTeacher)}/status`, {
-          method: "POST", body: JSON.stringify({ active })
-        });
-        if (!active && selectedTeacherId === toggle.dataset.toggleTeacher) {
-          teacherToken = "";
-          selectedTeacherId = "";
-        }
-        showToast(active ? "تم تفعيل الأستاذ." : "تم إيقاف الأستاذ وإبطال جلساته.");
-      } else return;
-      await Promise.all([loadTeachersTable(), loadAdminSummary()]);
-    } catch (error) { showToast(error.message); }
-  });
-
-  document.querySelector("#page-groups table tbody")?.addEventListener("click", async event => {
-    const edit = event.target.closest("[data-edit-group]");
-    const toggle = event.target.closest("[data-toggle-group]");
-    try {
-      if (edit) {
-        const group = adminGroupsCache.find(item => Number(item.id) === Number(edit.dataset.editGroup));
-        if (!group) return;
-        const name = prompt("اسم الفوج:", group.name);
-        if (name === null) return;
-        const weekday = prompt("اليوم (friday أو saturday):", group.weekday);
-        if (weekday === null) return;
-        const start_time = prompt("وقت البداية (HH:MM):", group.start_time);
-        if (start_time === null) return;
-        const end_time = prompt("وقت النهاية (HH:MM):", group.end_time);
-        if (end_time === null) return;
-        const priceInput = prompt("السعر بالدينار:", String(group.price_dzd));
-        if (priceInput === null) return;
-        const price_dzd = Number(priceInput);
-        await apiRequest(`/api/admin/groups/${group.id}/update`, {
-          method: "POST", body: JSON.stringify({ name, weekday, start_time, end_time, price_dzd })
-        });
-        showToast("تم تحديث بيانات الفوج.");
-      } else if (toggle) {
-        const active = toggle.dataset.active === "1" ? 0 : 1;
-        if (!confirm(active ? "إعادة تفعيل هذا الفوج؟" : "إيقاف الفوج؟ لن يظهر للطلاب بعد الإيقاف.")) return;
-        await apiRequest(`/api/admin/groups/${toggle.dataset.toggleGroup}/${active ? "restore" : "archive"}`, { method: "POST" });
-        showToast(active ? "تمت إعادة تفعيل الفوج." : "تم إيقاف الفوج.");
-      } else return;
-      await Promise.all([loadGroupsFromServer(), loadAdminSummary()]);
     } catch (error) { showToast(error.message); }
   });
 
@@ -624,7 +526,7 @@
       const payload = await apiRequest("/api/admin/students");
       const students = Array.isArray(payload.students) ? payload.students : [];
 
-      setText("dashboardStudentsCount", "—");
+      setText("dashboardStudentsCount", students.length);
       const tbody = document.getElementById("studentsTableBody");
 
       if (tbody) {
@@ -672,7 +574,7 @@
     } catch (error) {
       console.error("تعذر تحميل التلاميذ:", error);
 
-      setText("dashboardStudentsCount", "—");
+      setText("dashboardStudentsCount", students.length);
       const tbody = document.getElementById("studentsTableBody");
 
       if (tbody) {
@@ -724,28 +626,6 @@
       button.disabled = false;
     }
   });
-
-  async function loadAdminPayments() {
-    const tbody = document.getElementById("adminPaymentsBody");
-    if (!tbody) return;
-    try {
-      const { payments = [] } = await apiRequest("/api/admin/payments");
-      adminPaymentsCache = payments;
-      tbody.innerHTML = payments.map(item => `
-        <tr>
-          <td><b>${escapeHTML(item.first_name)} ${escapeHTML(item.last_name)}</b></td>
-          <td>${escapeHTML(item.group_name)}</td>
-          <td>${escapeHTML(item.teacher_name)}</td>
-          <td>${formatDate(item.session_date)}</td>
-          <td>${escapeHTML(item.price_dzd)} دج</td>
-          <td><span class="status ${item.payment_status === "paid" ? "status-active" : "status-pending"}">${item.payment_status === "paid" ? "مدفوع" : "غير مدفوع"}</span></td>
-          <td>${item.status === "cancelled" ? "ملغى" : item.status === "attended" ? "حضر" : item.status === "absent" ? "غائب" : "مسجل"}</td>
-        </tr>
-      `).join("") || '<tr><td colspan="7">لا توجد حجوزات حتى الآن.</td></tr>';
-    } catch (error) {
-      tbody.innerHTML = `<tr><td colspan="7">${escapeHTML(error.message)}</td></tr>`;
-    }
-  }
 
   async function loadAdminSummary() {
     const payload = await apiRequest("/api/admin/summary");
@@ -1056,7 +936,6 @@
       loadRegistrationRequests(),
       loadTeachersTable(),
       loadAdminNotifications(),
-      loadAdminPayments(),
       loadAdminSummary()
     ]);
   })();

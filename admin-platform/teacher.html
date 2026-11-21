@@ -11,7 +11,7 @@
 <div id="loginView" class="card login">
   <div class="brand">مدرستي<span style="color:#2457d6">.</span> · فضاء الأستاذ</div>
   <p class="muted">سجّل الدخول لإدارة أفواجك وتلاميذك ومدفوعاتك.</p>
-  <form id="loginForm" autocomplete="on">
+  <form id="loginForm">
     <label class="field">معرّف الأستاذ<input id="teacherId" value="teacher-boumediene" required></label>
     <label class="field">كلمة المرور<input id="teacherPassword" type="password" required></label>
     <p id="loginError" class="error"></p><button class="btn" type="submit">دخول</button>
@@ -26,7 +26,7 @@
     <div class="card stat">دخلك الإجمالي<strong id="revenue">0 دج</strong></div>
   </section>
   <section class="card">
-    <div class="row" style="justify-content:space-between"><div><h2>أفواجي</h2><p class="muted">هذه القائمة تخص حسابك فقط.</p></div><button class="btn" id="addGroup">＋ إضافة فوج</button></div>
+    <div class="row" style="justify-content:space-between"><div><h2>أفواجي</h2><p class="muted">هذه القائمة تخص حسابك فقط. يمكنك تنظيف تسجيلات الحصة بعد انتهائها مع الاحتفاظ بسجل المدفوعات.</p></div><button class="btn" id="addGroup">＋ إضافة فوج</button></div>
     <div id="groups" class="grid"></div>
   </section>
   <section class="card hidden" id="studentsPanel">
