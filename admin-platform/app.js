@@ -710,16 +710,6 @@
         >
           فتح الفوج
         </button>
-        <button
-          type="button"
-          class="outline-btn"
-          style="width:100%; margin-top:8px;"
-          data-clear-teacher-group="${escapeHTML(group.id)}"
-          data-group-name="${escapeHTML(groupName(group.name))}"
-          data-bookings-count="${Number(group.bookings_count || 0)}"
-        >
-          إفراغ تسجيلات الفوج
-        </button>
       </article>
     `).join("");
   }
@@ -880,43 +870,10 @@
   // أحداث فضاء الأستاذ
   // ==========================================
 
-  document.getElementById("teacherGroupsGrid")?.addEventListener("click", async event => {
-    const clearButton = event.target.closest("[data-clear-teacher-group]");
-    if (clearButton) {
-      const groupId = Number(clearButton.dataset.clearTeacherGroup);
-      const groupNameText = clearButton.dataset.groupName || "هذا الفوج";
-      const count = Number(clearButton.dataset.bookingsCount || 0);
-      const confirmed = window.confirm(
-        `تأكيد إفراغ تسجيلات ${groupNameText}؟\n\n` +
-        `عدد التسجيلات الظاهرة حالياً: ${count}.\n\n` +
-        "سيتم أرشفة تسجيلات الحصص المنتهية فقط. لن يُحذف الفوج أو التلاميذ، " +
-        "ولن تتغير المدفوعات أو سجلاتها، ولن تتغير صفحة التلميذ."
-      );
-      if (!confirmed) return;
-
-      clearButton.disabled = true;
-      const originalText = clearButton.textContent;
-      clearButton.textContent = "جارٍ الإفراغ...";
-      try {
-        const result = await teacherApiRequest(
-          `/api/teacher/groups/${encodeURIComponent(groupId)}/clear-current`,
-          { method: "POST" }
-        );
-        showToast(`${result.message || "تم إفراغ التسجيلات."} (${result.archived_count ?? 0} تسجيل)`);
-        await Promise.all([loadTeacherGroups(), loadTeacherSummary()]);
-        if (selectedTeacherGroupId === groupId) {
-          await loadTeacherGroupStudents(groupId);
-        }
-      } catch (error) {
-        showToast(error.message || "تعذر إفراغ تسجيلات الفوج.");
-        clearButton.disabled = false;
-        clearButton.textContent = originalText;
-      }
-      return;
-    }
-
+  document.getElementById("teacherGroupsGrid")?.addEventListener("click", event => {
     const button = event.target.closest("[data-teacher-group-id]");
     if (!button) return;
+
     loadTeacherGroupStudents(button.dataset.teacherGroupId);
   });
 
