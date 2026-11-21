@@ -42,7 +42,7 @@ async function loadSummary(){
 }
 async function loadGroups(){
   const {groups=[]}=await api("/api/teacher/groups");
-  $("groups").innerHTML=groups.map(g=>`<article class="stat"><b>${safe(g.name)}</b><p>${day(g.weekday)} · ${safe(g.start_time)}–${safe(g.end_time)}</p><p>${money(g.price_dzd)} للحصة · ${g.bookings_count} تسجيل ظاهر</p><button class="btn light" data-group="${g.id}">عرض التلاميذ</button> <button class="btn" data-clear-group="${g.id}" data-group-name="${safe(g.name)}" data-bookings-count="${Number(g.bookings_count||0)}">إفراغ تسجيلات الفوج</button></article>`).join("") || "<p>لا توجد أفواج بعد.</p>";
+  $("groups").innerHTML=groups.map(g=>`<article class="stat"><b>${safe(g.name)}</b><p>${day(g.weekday)} · ${safe(g.start_time)}–${safe(g.end_time)}</p><p>${money(g.price_dzd)} للحصة · ${g.bookings_count} حجز</p><button class="btn light" data-group="${g.id}">عرض التلاميذ</button> <button class="btn" data-clear-group="${g.id}">تنظيف تسجيلات الحصة</button></article>`).join("") || "<p>لا توجد أفواج بعد.</p>";
 }
 async function loadPayments(){
   const {payments=[]}=await api("/api/teacher/payments");
@@ -59,10 +59,7 @@ $("groups").addEventListener("click",async e=>{
   const clear=e.target.closest("[data-clear-group]");
   if(clear){
     const id=Number(clear.dataset.clearGroup);
-    const groupName=clear.dataset.groupName || "هذا الفوج";
-    const count=Number(clear.dataset.bookingsCount || 0);
-    const message=`تأكيد إفراغ تسجيلات ${groupName}؟\\n\\nسيتم إخفاء تسجيلات الحصص المنتهية من قائمة تسجيلات الفوج في لوحة الأستاذ فقط.\\nعدد التسجيلات الظاهرة حالياً: ${count}.\\n\\nلن يتم حذف الفوج أو التلاميذ، ولن تتغير المدفوعات أو سجلها، ولن تتغير صفحة التلميذ.`;
-    if(!confirm(message))return;
+    if(!confirm("سيتم أرشفة تسجيلات آخر حصة منتهية لهذا الفوج. لن تتغير المدفوعات أو سجلها. هل تريد المتابعة؟"))return;
     clear.disabled=true;
     try{const result=await api(`/api/teacher/groups/${id}/clear-current`,{method:"POST"});alert(`${result.message} (${result.archived_count} تسجيل)`);await Promise.all([loadGroups(),loadSummary(),loadPayments()]);if(selectedGroup===id)await loadStudents(id);}
     catch(err){alert(err.message);clear.disabled=false;}
